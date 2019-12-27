@@ -12,8 +12,8 @@ variable "instance_type" {
     default = "t2.micro"
 }
 variable "key_name" {
-    default = "hf_infra_sandbox_application_key"
+    default = "kube_the_hard_way"
 }
 variable "public_key_path" {
-    default = "~/.ssh/hf_infra_sandbox_application_key.pub"
+    default = "~/.ssh/kube_the_hard_way.pub"
 }

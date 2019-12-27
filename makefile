@@ -6,47 +6,10 @@ no_targets__:
 
 aws_login:
 	@echo Login with saml2aws to get temp credentiasl
-	saml2aws login --force --profile=hf-sandbox-account
+	saml2aws login --force --profile=kube-the-hard-way
 
 ssh_agent:
 	@echo Configure ssh agent and add key
 	eval 'ssh-agent -s'
-	ssh-add ~/.ssh/hf_infra_sandbox_application_key
-
-infra_create_and_deploy:
-	@echo Deploying all infrastructure and BE,FE code
-	@echo applying terraform infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && saml2aws login --force --profile=hf-sandbox-account && terraform apply && (./modules/hf-infra-core-application/deploy_all.sh $(ENV) all)
-
-infra_create:
-	@echo applying terraform infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && saml2aws login --force --profile=hf-sandbox-account && terraform apply
-
-infra_destroy:
-	@echo Destroy all infrastructure
-	saml2aws login --force --profile=hf-sandbox-account && terraform destroy
-
-infra_plan:
-	@echo Checks infra for deviations
-	saml2aws login --force --profile=hf-sandbox-account && terraform plan
-
-# V2 Docker-based deployments
-
-ENV?=sandbox
-
-deploy_all:
-	@echo deploys FE,BE and Socker Server on $(ENV)infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && ./modules/hf-infra-core-application/deploy_all.sh $(ENV) all
-
-deploy_backend:
-	@echo deploys BE on $(ENV)infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && ./modules/hf-infra-core-application/deploy_all.sh $(ENV) backend
-
-deploy_frontend:
-	@echo deploys Frontend on $(ENV) infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && ./modules/hf-infra-core-application/deploy_all.sh $(ENV) frontend
-
-deploy_seed:
-	@echo Seeds database on $(ENV) infrastructure
-	(eval 'ssh-agent -s'; ssh-add ~/.ssh/hf_infra_sandbox_application_key) && ./modules/hf-infra-core-application/deploy_all.sh $(ENV) seed
+	ssh-add ~/.ssh/kube_the_hard_way
 

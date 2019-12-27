@@ -7,7 +7,7 @@ terraform {
     key            = "kubernetes-the-hard-way/terraform.tfstate"
     region         = "eu-central-1"
     dynamodb_table = "sandbox-tfstate-lock-table"
-    profile        = "hf-sandbox-account"
+    profile        = "kube-the-hard-way"
   }
 }
 
