@@ -7,3 +7,6 @@ We will generate certificates for:
 + Kubernetes Api Server Certificate: This is the TLS certificate for the Kubernetes API.
 
 + Service Account Key Pair: Kubernetes uses a certificate to sign service account tokens, so we need to provide a certificate for that purpose
+
+# Provisioning Certificate Authority
+
