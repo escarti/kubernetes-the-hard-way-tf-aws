@@ -291,3 +291,48 @@ Results:
 kube-scheduler-key.pem
 kube-scheduler.pem
 ```
+
+## Server side certificates
+
+### The Kubernetes API Server Certificate
+
+The kubernetes-the-hard-way static IP address will be included in the list of subject alternative names for the Kubernetes API Server certificate. This will ensure the certificate can be validated by remote clients.
+
+Generate the Kubernetes API Server certificate and private key:
+
+```
+AWS_RESULT = $(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+
+CERT_HOSTNAME=10.32.0.1,,10.240.0.10,10.240.0.11,10.240.0.12,<controller node 1 Private IP>,<controller node 1 hostname>,<controller node 2 Private IP>,<controller node 2 hostname>,<API load balancer Private IP>,<API load balancer hostname>,127.0.0.1,localhost,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local
+
+{
+
+cat > kubernetes-csr.json << EOF
+{
+  "CN": "kubernetes",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=${CERT_HOSTNAME} \
+  -profile=kubernetes \
+  kubernetes-csr.json | cfssljson -bare kubernetes
+
+}
+```
