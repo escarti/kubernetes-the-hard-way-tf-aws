@@ -1,19 +1,19 @@
 variable "aws_region" {
-    default = "eu-central-1"
+  default = "eu-central-1"
 }
 variable "aws_profile" {
-    default = "hf-sandbox-account"
+  default = "kube-the-hard-way"
 }
 variable "ami_type" {
-    # Ubuntu 16.04 ami
-    default = "ami-050a22b7e0cf85dd0"
+  # Ubuntu 16.04 ami
+  default = "ami-050a22b7e0cf85dd0"
 }
 variable "instance_type" {
-    default = "t2.micro"
+  default = "t2.micro"
 }
 variable "key_name" {
-    default = "kube_the_hard_way"
+  default = "kube_the_hard_way"
 }
 variable "public_key_path" {
-    default = "~/.ssh/kube_the_hard_way.pub"
+  default = "~/.ssh/kube_the_hard_way.pub"
 }

@@ -1,35 +1,5 @@
-# Why?
 
-We will generate certificates for:
-
-+ Client certificates: Provide client authentication for various users: admin, kube-controller-manager, kube-proxy, kube-scheduler and kubelet client on each worker node
-
-+ Kubernetes Api Server Certificate: This is the TLS certificate for the Kubernetes API.
-
-+ Service Account Key Pair: Kubernetes uses a certificate to sign service account tokens, so we need to provide a certificate for that purpose
-
-# Provisioning Certificate Authority
-
-Generate a temp folder to put all files
-```
-mkdir tmp
-cd tmp/
-```
-
-## Client-Side certificates
-
-If you wish you can jump this part by directly running. [See here](../scripts/04_generate_client_certificates.sh)
-
-```
-./../scripts/04_generate_client_certificates.sh
-```
-
-### Certificate Authority
-
-Generate CA configuration file
-
-```
-{
+# Certificate Authority
 
 cat > ca-config.json <<EOF
 {
@@ -68,24 +38,7 @@ EOF
 
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 
-}
-```
-Results
-```
-ca-key.pem
-ca.pem
-```
-
-### Client and Server Certificates
-Ensure you are in the temp folder
-```
-cd tmp/
-```
-
-Generate the admin client certificate and private key
-
-```
-{
+# Admin
 
 cat > admin-csr.json <<EOF
 {
@@ -113,23 +66,8 @@ cfssl gencert \
   -profile=kubernetes \
   admin-csr.json | cfssljson -bare admin
 
-}
-```
-Results:
-```
-admin-key.pem
-admin.pem
-```
+# Worker Certificates
 
-### The Kubelet Client Certificates
-
-Kubernetes uses a special-purpose authorization mode called Node Authorizer, that specifically authorizes API requests made by Kubelets. In order to be authorized by the Node Authorizer, Kubelets must use a credential that identifies them as being in the system:nodes group, with a username of system:node:<nodeName>. In this section you will create a certificate for each Kubernetes worker node that meets the Node Authorizer requirements.
-
-Generate a certificate and private key for each Kubernetes worker node:
-
-You have a script file you can run under [/scripts/04_generate_worker_cets.sh](../scripts/04_generate_worker_cets.sh)
-
-```
 AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
 INSTANCE_IDS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
 
@@ -167,13 +105,8 @@ cfssl gencert \
   ${PUBLIC_DNS}-csr.json | cfssljson -bare ${PUBLIC_DNS}
 
 done
-```
-### The Controller Manager Client Certificate
 
-Generate the kube-controller-manager client certificate and private key:
-
-```
-{
+# Controller
 
 cat > kube-controller-manager-csr.json <<EOF
 {
@@ -201,21 +134,7 @@ cfssl gencert \
   -profile=kubernetes \
   kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager
 
-}
-```
-
-Results:
-```
-kube-controller-manager-key.pem
-kube-controller-manager.pem
-```
-
-### The Kube Proxy Client Certificate
-
-Generate the kube-proxy client certificate and private key:
-
-```
-{
+# Proxy
 
 cat > kube-proxy-csr.json <<EOF
 {
@@ -243,19 +162,7 @@ cfssl gencert \
   -profile=kubernetes \
   kube-proxy-csr.json | cfssljson -bare kube-proxy
 
-}
-```
-
-Results:
-```
-kube-proxy-key.pem
-kube-proxy.pem
-```
-
-### The Scheduler Client Certificate
-
-```
-{
+# Scheduler
 
 cat > kube-scheduler-csr.json <<EOF
 {
@@ -283,11 +190,3 @@ cfssl gencert \
   -profile=kubernetes \
   kube-scheduler-csr.json | cfssljson -bare kube-scheduler
 
-}
-```
-
-Results:
-```
-kube-scheduler-key.pem
-kube-scheduler.pem
-```

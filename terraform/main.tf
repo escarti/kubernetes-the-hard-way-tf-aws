@@ -26,7 +26,8 @@ resource "aws_key_pair" "kube_auth" {
 
 ## -- VPC --
 resource "aws_vpc" "kube_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
 }
 
 ## -- Internet Gateway --
@@ -112,7 +113,7 @@ resource "aws_security_group" "kube_web_open_sg" {
 }
 ## -- Subnet and Rout tabel association
 resource "aws_route_table_association" "kube_public_assoc" {
-  count = length(aws_subnet.kube_public_subnet)  
+  count          = length(aws_subnet.kube_public_subnet)
   subnet_id      = aws_subnet.kube_public_subnet[count.index].id
   route_table_id = aws_route_table.kube_public_rt.id
 }
@@ -149,7 +150,7 @@ resource "aws_instance" "kube_worker" {
 }
 
 resource "aws_instance" "kube_load_balancer" {
-  
+
   instance_type = var.instance_type
   ami           = var.ami_type
 
@@ -164,9 +165,9 @@ resource "aws_instance" "kube_load_balancer" {
 }
 
 resource "null_resource" "ansible_provisioner_file" {
-    depends_on = [aws_instance.kube_load_balancer, aws_instance.kube_worker, aws_instance.kube_master]
+  depends_on = [aws_instance.kube_load_balancer, aws_instance.kube_worker, aws_instance.kube_master]
 
-    provisioner "local-exec" {
+  provisioner "local-exec" {
     command = <<EOD
 cat <<EOF > aws_hosts.yml
 ---
