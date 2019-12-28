@@ -16,6 +16,15 @@ mkdir tmp
 cd tmp/
 ```
 
+You can automate this whole step by running:
+```
+{
+  ./../scripts/04_generate_client_certificates.sh
+  ./../scripts/04_generate_server_certificates.sh
+  ./../scripts/04_distribute_certificate_files.sh
+}
+```
+
 ## Client-Side certificates
 
 If you wish you can jump this part by directly running. [See here](../scripts/04_generate_client_certificates.sh)
@@ -301,11 +310,25 @@ The kubernetes-the-hard-way static IP address will be included in the list of su
 Generate the Kubernetes API Server certificate and private key:
 
 ```
-AWS_RESULT = $(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
-
-CERT_HOSTNAME=10.32.0.1,,10.240.0.10,10.240.0.11,10.240.0.12,<controller node 1 Private IP>,<controller node 1 hostname>,<controller node 2 Private IP>,<controller node 2 hostname>,<API load balancer Private IP>,<API load balancer hostname>,127.0.0.1,localhost,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local
-
 {
+
+AWS_MASTER_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+ --profile=kube-the-hard-way --region=eu-central-1)
+MASTER_PRIVATE_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
+MASTER_DNS_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
+MASTER_PUBLIC_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
+
+AWS_ALB_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
+ --profile=kube-the-hard-way --region=eu-central-1)
+ALB_PRIVATE_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
+ALB_DNS_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
+ALB_PUBLIC_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
+
+
+CERT_HOSTNAME=10.32.0.1,,10.240.0.10,10.240.0.11,10.240.0.12,$MASTER_PRIVATE_IP_LIST,\
+$MASTER_DNS_LIST,$MASTER_PUBLIC_IP_LIST,127.0.0.1,localhost,kubernetes,kubernetes.default,\
+kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local,\
+$ALB_PRIVATE_IP_LIST,$ALB_DNS_LIST,$ALB_PUBLIC_IP_LIST
 
 cat > kubernetes-csr.json << EOF
 {
@@ -336,3 +359,87 @@ cfssl gencert \
 
 }
 ```
+> The Kubernetes API server is automatically assigned the `kubernetes` internal dns name, which will be linked to the first IP address (`10.32.0.1`) from the address range (`10.32.0.0/24`) reserved for internal cluster services during the [control plane bootstrapping](08-bootstrapping-kubernetes-controllers.md#configure-the-kubernetes-api-server) lab.
+
+### The Service Account Key Pair
+
+The Kubernetes Controller Manager leverages a key pair to generate and sign service account tokens as described in the [managing service](https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/) accounts documentation.
+
+Generate the service-account certificate and private key:
+
+```
+{
+
+cat > service-account-csr.json <<EOF
+{
+  "CN": "service-accounts",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  service-account-csr.json | cfssljson -bare service-account
+
+}
+```
+
+### Distribute the Client and Server Certificates
+
+Copy the appropriate certificates and private keys to each worker instance:
+
+You can also use the provided [script](../scripts/04_distribute_certificate_files.sh)
+
+```
+{
+  AWS_WORKER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+INSTANCE_IDS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
+
+for instance in $INSTANCE_IDS; do
+
+PUBLIC_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicIpAddress') 
+PUBLIC_DNS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicDnsName') 
+PRIVATE_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateIpAddress') 
+
+scp -i ~/.ssh/kube_the_hard_way ca.pem $PUBLIC_DNS-key.pem $PUBLIC_DNS.pem ubuntu@$PUBLIC_IP:~/
+
+done
+}
+```
+
+Copy the appropriate certificates and private keys to each controller instance:
+
+```
+{
+
+AWS_CONTROLLER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+INSTANCE_IDS=$(echo $AWS_CONTROLLER_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
+
+for instance in $INSTANCE_IDS; do
+
+PUBLIC_IP=$(echo $AWS_CONTROLLER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicIpAddress') 
+
+scp -i ~/.ssh/kube_the_hard_way ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+    service-account-key.pem service-account.pem ubuntu@$PUBLIC_IP:~/
+
+done
+
+}
+```
+> The `kube-proxy`, `kube-controller-manager`, `kube-scheduler`, and `kubelet` client certificates will be used to generate client authentication configuration files in the next lab.
+Next: [Generating Kubernetes Configuration Files for Authentication](05-kubernetes-configuration-files.md)
