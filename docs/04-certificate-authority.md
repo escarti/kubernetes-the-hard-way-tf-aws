@@ -405,6 +405,7 @@ Copy the appropriate certificates and private keys to each worker instance:
 
 You can also use the provided [script](../scripts/04_distribute_certificate_files.sh)
 
+`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
 {
   AWS_WORKER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
@@ -424,6 +425,7 @@ done
 
 Copy the appropriate certificates and private keys to each controller instance:
 
+`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
 {
 

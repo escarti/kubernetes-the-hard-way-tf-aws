@@ -6,16 +6,22 @@ In this lab you will generate [Kubernetes configuration files](https://kubernete
 
 In this section you will generate kubeconfig files for the `controller manager`, `kubelet`, `kube-proxy`, and `scheduler` clients and the `admin` user.
 
+You can automate this whole step by running:
+```
+{
+  ./../scripts/05_generate_kubeconfig_files.sh
+  ./../scripts/05_distribute_kubeconfig_files.sh
+}
+```
 ### Kubernetes Public IP Address
 
 Each kubeconfig requires a Kubernetes API Server to connect to. To support high availability the IP address assigned to the external load balancer fronting the Kubernetes API Servers will be used.
 
-Retrieve the `kubernetes-the-hard-way` static IP address:
+Retrieve the `api-load-balancer` private IP address:
 
 ```
-KUBERNETES_PUBLIC_ADDRESS=$(gcloud compute addresses describe kubernetes-the-hard-way \
-  --region $(gcloud config get-value compute/region) \
-  --format 'value(address)')
+KUBERNETES_PRIVATE_ADDRESS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
+ --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress" --output text)
 ```
 
 ### The kubelet Kubernetes Configuration File
@@ -27,11 +33,15 @@ When generating kubeconfig files for Kubelets the client certificate matching th
 Generate a kubeconfig file for each worker node:
 
 ```
-for instance in worker-0 worker-1 worker-2; do
+{
+AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+PUBLIC_DNS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].PublicDnsName') 
+
+for instance in $PUBLIC_DNS; do
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \
     --embed-certs=true \
-    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
+    --server=https://${KUBERNETES_PRIVATE_ADDRESS}:6443 \
     --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-credentials system:node:${instance} \
@@ -47,14 +57,13 @@ for instance in worker-0 worker-1 worker-2; do
 
   kubectl config use-context default --kubeconfig=${instance}.kubeconfig
 done
+}
 ```
 
 Results:
 
 ```
-worker-0.kubeconfig
-worker-1.kubeconfig
-worker-2.kubeconfig
+$WOKER_DNS.kubeconfig
 ```
 
 ### The kube-proxy Kubernetes Configuration File
@@ -66,7 +75,7 @@ Generate a kubeconfig file for the `kube-proxy` service:
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \
     --embed-certs=true \
-    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
+    --server=https://${KUBERNETES_PRIVATE_ADDRESS}:6443 \
     --kubeconfig=kube-proxy.kubeconfig
 
   kubectl config set-credentials system:kube-proxy \
@@ -197,17 +206,24 @@ admin.kubeconfig
 
 Copy the appropriate `kubelet` and `kube-proxy` kubeconfig files to each worker instance:
 
+`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
-for instance in worker-0 worker-1 worker-2; do
-  gcloud compute scp ${instance}.kubeconfig kube-proxy.kubeconfig ${instance}:~/
+PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
+
+for instance in $PUBLIC_DNS; do
+  scp -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
 done
 ```
 
 Copy the appropriate `kube-controller-manager` and `kube-scheduler` kubeconfig files to each controller instance:
 
+`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
-for instance in controller-0 controller-1 controller-2; do
-  gcloud compute scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ${instance}:~/
+PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
+
+for instance in $PUBLIC_DNS; do
+    scp -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
+ kube-scheduler.kubeconfig ubuntu@${instance}:~/
 done
 ```
 
