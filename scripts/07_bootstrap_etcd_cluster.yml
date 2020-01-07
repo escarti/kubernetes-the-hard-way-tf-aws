@@ -1,0 +1,9 @@
+---
+- hosts: master
+  remote_user: ubuntu
+  tasks:
+    - name: Get etcd binaries
+      unarchive:
+        src: https://github.com/etcd-io/etcd/releases/download/v3.4.0/etcd-v3.4.0-linux-amd64.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes  
