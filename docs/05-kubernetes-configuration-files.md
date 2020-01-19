@@ -206,9 +206,8 @@ admin.kubeconfig
 
 Copy the appropriate `kubelet` and `kube-proxy` kubeconfig files to each worker instance:
 
-`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
-PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
+PUBLIC_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]"))
 
 for instance in $PUBLIC_DNS; do
   scp -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
@@ -217,14 +216,15 @@ done
 
 Copy the appropriate `kube-controller-manager` and `kube-scheduler` kubeconfig files to each controller instance:
 
-`I don't know why this step does not run when copy-pasting, but it runs using the provided bash scripts` 
 ```
-PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
+{
+PUBLIC_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]"))
 
 for instance in $PUBLIC_DNS; do
     scp -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
  kube-scheduler.kubeconfig ubuntu@${instance}:~/
 done
+}
 ```
 
 Next: [Generating the Data Encryption Config and Key](06-data-encryption-keys.md)
