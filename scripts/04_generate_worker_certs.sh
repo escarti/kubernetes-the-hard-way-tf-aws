@@ -1,6 +1,7 @@
 #!/bin/bash
 
-AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 INSTANCE_IDS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
 
 for instance in $INSTANCE_IDS; do

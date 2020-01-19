@@ -139,7 +139,7 @@ Generate a certificate and private key for each Kubernetes worker node:
 You have a script file you can run under [/scripts/04_generate_worker_cets.sh](../scripts/04_generate_worker_cets.sh)
 
 ```
-AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 INSTANCE_IDS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
 
 for instance in $INSTANCE_IDS; do
@@ -313,19 +313,19 @@ Generate the Kubernetes API Server certificate and private key:
 {
 
 AWS_MASTER_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
- --profile=kube-the-hard-way --region=eu-central-1)
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 MASTER_PRIVATE_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
 MASTER_DNS_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
 MASTER_PUBLIC_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
 
 AWS_ALB_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
- --profile=kube-the-hard-way --region=eu-central-1)
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 ALB_PRIVATE_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
 ALB_DNS_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
 ALB_PUBLIC_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
 
 
-CERT_HOSTNAME=10.32.0.1,,10.240.0.10,10.240.0.11,10.240.0.12,$MASTER_PRIVATE_IP_LIST,\
+CERT_HOSTNAME=10.32.0.1,$MASTER_PRIVATE_IP_LIST,\
 $MASTER_DNS_LIST,$MASTER_PUBLIC_IP_LIST,127.0.0.1,localhost,kubernetes,kubernetes.default,\
 kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local,\
 $ALB_PRIVATE_IP_LIST,$ALB_DNS_LIST,$ALB_PUBLIC_IP_LIST
@@ -407,7 +407,7 @@ You can also use the provided [script](../scripts/04_distribute_certificate_file
 
 ```
 {
-  AWS_WORKER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+  AWS_WORKER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 INSTANCE_IDS=($(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId'))
 
 for instance in $INSTANCE_IDS; do
@@ -427,7 +427,7 @@ Copy the appropriate certificates and private keys to each controller instance:
 ```
 {
 
-AWS_CONTROLLER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+AWS_CONTROLLER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 INSTANCE_IDS=($(echo $AWS_CONTROLLER_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId'))
 
 for instance in $INSTANCE_IDS; do

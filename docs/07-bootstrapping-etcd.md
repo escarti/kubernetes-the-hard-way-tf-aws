@@ -16,11 +16,11 @@ First get the ETCD cluster setting before connecting to any instance and list al
 
 ```
 {
-PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
+PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
 
-PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
+PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way "Name=instance-state-name,Values=running" --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
 
 PUBLIC_CONTROLLER_IPS=($(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]"))
 
@@ -225,7 +225,7 @@ EOF
 
 ## Verification
 
-List the etcd cluster members:
+List the etcd cluster members within any of the ec2 machines:
 
 ```
 sudo ETCDCTL_API=3 etcdctl member list \
@@ -235,12 +235,12 @@ sudo ETCDCTL_API=3 etcdctl member list \
   --key=/etc/etcd/kubernetes-key.pem
 ```
 
-> output
+> output should look something like this
 
 ```
-3a57933972cb5131, started, controller-2, https://10.240.0.12:2380, https://10.240.0.12:2379
-f98dc20bce6225a0, started, controller-0, https://10.240.0.10:2380, https://10.240.0.10:2379
-ffed16798470cab5, started, controller-1, https://10.240.0.11:2380, https://10.240.0.11:2379
+c1d5f629d85f8cbe, started, ec2-3-124-5-160.eu-central-1.compute.amazonaws.com, https://10.0.1.221:2380, https://10.0.1.221:2379, false
+d45b3d2eee9e9641, started, ec2-18-197-88-137.eu-central-1.compute.amazonaws.com, https://10.0.0.179:2380, https://10.0.0.179:2379, false
+e519dfc3b0113b31, started, ec2-3-125-119-233.eu-central-1.compute.amazonaws.com, https://10.0.2.238:2380, https://10.0.2.238:2379, false
 ```
 
 Next: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)

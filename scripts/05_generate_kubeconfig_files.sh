@@ -1,9 +1,11 @@
 #!/bin/bash
 
 KUBERNETES_PRIVATE_ADDRESS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
- --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress" --output text)
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
+  "Reservations[].Instances[].PrivateIpAddress" --output text)
 
-AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" --profile=kube-the-hard-way --region=eu-central-1)
+AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 PUBLIC_DNS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].PublicDnsName') 
 
 for instance in $PUBLIC_DNS; do

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
+PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
+ "Reservations[].Instances[].PublicIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
+ "Reservations[].Instances[].PublicDnsName")
 
 PUBLIC_CONTROLLER_IPS=$(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]")
 
