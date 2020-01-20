@@ -1,14 +1,14 @@
 #!/bin/bash
 
-PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
  "Reservations[].Instances[].PublicIpAddress")
 
-PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
  "Reservations[].Instances[].PrivateIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
  "Reservations[].Instances[].PublicDnsName")
 
@@ -23,12 +23,12 @@ done
 
 CLUSTER_SETTING=${CLUSTER_SETTING:1}
 
-cat <<EOF > aws_master_hosts.yml
+cat <<EOF > aws_controller_hosts.yml
 ---        
 all:       
   children:
     
-    master:                           
+    controller:                           
       hosts:                                                          
 $(declare -i i=0
 for ip in $PUBLIC_CONTROLLER_IPS; do
@@ -44,4 +44,4 @@ done)
                                                                              
 EOF
 
-ansible-playbook -i aws_master_hosts.yml ../scripts/07_bootstrap_etcd_cluster.yml
+ansible-playbook -i aws_controller_hosts.yml ../scripts/07_bootstrap_etcd_cluster.yml

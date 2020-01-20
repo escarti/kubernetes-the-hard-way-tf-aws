@@ -135,14 +135,14 @@ resource "aws_route_table_association" "kube_public_assoc" {
 }
 
 # --- Instances ---
-resource "aws_instance" "kube_master" {
+resource "aws_instance" "kube_controller" {
   count = length(aws_subnet.kube_public_subnet)
 
   instance_type = var.instance_type
   ami           = var.ami_type
 
   tags = {
-    Name = "kube_master_${count.index}_instance"
+    Name = "kube_controller_${count.index}_instance"
   }
 
   key_name               = aws_key_pair.kube_auth.id
@@ -181,7 +181,7 @@ resource "aws_instance" "kube_load_balancer" {
 }
 
 resource "null_resource" "ansible_provisioner_file" {
-  depends_on = [aws_instance.kube_load_balancer, aws_instance.kube_worker, aws_instance.kube_master]
+  depends_on = [aws_instance.kube_load_balancer, aws_instance.kube_worker, aws_instance.kube_controller]
 
   provisioner "local-exec" {
     command = <<EOD
@@ -190,9 +190,9 @@ cat <<EOF > aws_hosts.yml
 all:
   children:
 
-    master:
+    controller:
       hosts:
-        ${join("\n\t\t\t\t", aws_instance.kube_master.*.public_ip)}
+        ${join("\n\t\t\t\t", aws_instance.kube_controller.*.public_ip)}
     
     workers:
       hosts:

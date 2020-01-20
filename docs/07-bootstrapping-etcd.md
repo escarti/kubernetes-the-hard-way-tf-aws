@@ -2,6 +2,12 @@
 
 Kubernetes components are stateless and store cluster state in [etcd](https://github.com/etcd-io/etcd). In this lab you will bootstrap a three node etcd cluster and configure it for high availability and secure remote access.
 
+You can automate this step by running:
+```
+cd tmp
+../scripts/07_bootsrap_etcd_cluster.sh
+```
+
 ## Prerequisites
 
 The commands in this lab must be run on each controller instance.
@@ -16,11 +22,11 @@ First get the ETCD cluster setting before connecting to any instance and list al
 
 ```
 {
-PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
+PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
 
-PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
+PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
 
 PUBLIC_CONTROLLER_IPS=($(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]"))
 
@@ -53,12 +59,12 @@ First create the host inventory file to know where to connect.
 
 ```
 {                                
-cat <<EOF > aws_master_hosts.yml
+cat <<EOF > aws_controller_hosts.yml
 ---        
 all:       
   children:
     
-    master:                           
+    controller:                           
       hosts:                                                          
 $(declare -i i=0
 for ip in $PUBLIC_CONTROLLER_IPS; do
@@ -86,7 +92,7 @@ And copy this at the top of the file:
 
 ```
 ---
-- hosts: master
+- hosts: controller
   remote_user: ubuntu
   tasks:
 ````
@@ -214,6 +220,8 @@ EOF
 ```
 
 ANSIBLE:
+You can use the provided 07_etcd_service.template file to copy it to the controller instances
+
 ```
     - name: Create service file
       template:

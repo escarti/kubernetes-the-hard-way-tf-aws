@@ -23,4 +23,5 @@ all:
   	&& ./../scripts/04_distribute_certificate_files.sh\
 	&& ./../scripts/05_generate_kubeconfig_files.sh\
 	&& ./../scripts/05_distribute_kubeconfig_files.sh\
-	&& ./../scripts/06_generate_distribute_encryption_keys.sh
+	&& ./../scripts/06_generate_distribute_encryption_keys.sh\
+	&& ./../scripts/07_bootstrap_etcd_cluster.sh

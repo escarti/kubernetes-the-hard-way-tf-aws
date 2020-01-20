@@ -1,5 +1,5 @@
 ---
-- hosts: master
+- hosts: controller
   remote_user: ubuntu
   tasks:
 

@@ -14,7 +14,7 @@ We will deploy the following infrastructure:
 ssh-keygen -t rsa -f ~/.ssh/kube_the_hard_way
 ```
 6. One worker instance per subnet
-7. One master instance per subnet
+7. One controller instance per subnet
 8. One load balancer instance
 9. OUTPUT - One provissioner .yml file with the public IPs of our instances
 

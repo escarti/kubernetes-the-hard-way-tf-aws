@@ -16,7 +16,7 @@ resources:
       - identity: {}
 EOF
 
-PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance"\
+PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1\
   --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
 
