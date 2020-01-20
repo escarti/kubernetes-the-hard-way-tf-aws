@@ -14,6 +14,9 @@ ssh_agent:
 
 all:
 	@echo Do all
+	saml2aws login --force --profile=kube-the-hard-way
+	eval 'ssh-agent -s'
+	ssh-add ~/.ssh/kube_the_hard_way
 	mkdir -p tmp 
 	cd tmp && ./../scripts/04_generate_client_certificates.sh\
   	&& ./../scripts/04_generate_server_certificates.sh\

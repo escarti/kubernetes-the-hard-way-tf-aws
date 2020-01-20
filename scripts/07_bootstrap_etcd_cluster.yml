@@ -37,6 +37,6 @@
       become: yes
 
     - name: Start the etcd Server
-      shell: systemctl daemon-reload && systemctl enable etcd && systemctl start etcd
+      shell: systemctl daemon-reload && systemctl enable etcd && sudo systemctl stop etcd && systemctl start etcd
       become: yes
     

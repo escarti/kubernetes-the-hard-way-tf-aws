@@ -20,7 +20,7 @@ PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,
 
 PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" --profile=kube-the-hard-way "Name=instance-state-name,Values=running" --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_master_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
 
 PUBLIC_CONTROLLER_IPS=($(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]"))
 
@@ -177,6 +177,8 @@ CLUSTER_SETTING="PASTE_HERE_YOUR_STUFF_WITHIN"
 
 Create the `etcd.service` systemd unit file:
 
+SSH:
+
 ```
 cat <<EOF | sudo tee /etc/systemd/system/etcd.service
 [Unit]
@@ -211,14 +213,33 @@ WantedBy=multi-user.target
 EOF
 ```
 
+ANSIBLE:
+```
+    - name: Create service file
+      template:
+        src: "07_etcd_service.template"
+        dest: "/etc/systemd/system/etcd.service"
+      become: yes
+```
 ### Start the etcd Server
+
+SSH:
 
 ```
 {
   sudo systemctl daemon-reload
   sudo systemctl enable etcd
+  sudo systemctl stop etcd
   sudo systemctl start etcd
 }
+```
+
+ANSIBLE:
+
+```
+    - name: Start the etcd Server
+      shell: systemctl daemon-reload && systemctl enable etcd && systemctl start etcd
+      become: yes
 ```
 
 > Remember to run the above commands on each controller node: `controller-0`, `controller-1`, and `controller-2`.
