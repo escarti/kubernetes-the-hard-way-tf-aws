@@ -1,0 +1,154 @@
+---
+- hosts: worker
+  remote_user: ubuntu
+  tasks:
+
+  - name: Update the repository cache and install socat, conntrack and ipset
+    apt:
+      pkg:
+        - socat
+        - conntrack
+        - ipset
+      update_cache: yes
+    become: yes
+
+  - name: Create directories
+    file:
+      path: "{{item}}"
+      state: directory
+    become: yes
+    with_items: 
+      - "/etc/cni/net.d"
+      - "/opt/cni/bin"
+      - "/var/lib/kubelet"
+      - "/var/lib/kube-proxy"
+      - "/var/lib/kubernetes"
+      - "/var/run/kubernetes"
+      - "/etc/containerd"
+
+  - name: Download files
+    get_url:
+      url: "{{ item }}"
+      dest: /usr/local/bin/
+      mode: a+x
+    with_items:
+      - "https://storage.googleapis.com/kubernetes-the-hard-way/runsc"
+      - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kube-proxy"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubelet"
+    become: yes
+
+  - name: Rename runc.amd64 to runc
+    shell: cp /usr/local/bin/runc.amd64 /usr/local/bin/runc
+    become: yes
+
+  - name: Download and untar crictl
+    unarchive:
+      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.13.0/crictl-v1.13.0-linux-amd64.tar.gz"
+      dest: /usr/local/bin/
+      remote_src: yes
+    become: yes
+  
+  - name: Download and untar containerd
+    unarchive:
+      src: "https://github.com/containerd/containerd/releases/download/v1.2.0-beta.2/containerd-1.2.0-beta.2.linux-amd64.tar.gz"
+      dest: /
+      remote_src: yes
+    become: yes
+
+  - name: Download and untar cni-plugins
+    unarchive:
+      src: "https://github.com/containerd/containerd/releases/download/v1.2.0-beta.2/containerd-1.2.0-beta.2.linux-amd64.tar.gz"
+      dest: /opt/cni/
+      remote_src: yes
+    become: yes
+
+# Configure Containerd
+
+  - name: Get Pod-Cidr
+    shell: |
+      curl -s http://169.254.169.254/latest/user-data/ | tr "|" "\n" | grep "^pod-cidr" | cut -d"=" -f2
+    args:
+      warn: false
+    register: pod_cidr
+  
+  - name: Create CNI bridge file
+    template:
+      src: "09_bridge_conf.template"
+      dest: "/etc/cni/net.d/10-bridge.conf"
+    become: yes
+
+  - name: Create CNI loopback service file
+    template:
+      src: "09_loopback_conf.template"
+      dest: "/etc/cni/net.d/99-loopback.conf"
+    become: yes
+  
+  - name: Create containerd config file
+    template:
+      src: "09_containerd_config.template"
+      dest: "/etc/containerd/config.toml"
+    become: yes
+
+  - name: Create containerd service file
+    template:
+      src: "09_containerd_service.template"
+      dest: "/etc/systemd/system/containerd.service"
+    become: yes
+
+# Configure Kubelet
+
+  - name: Get DNS-name
+    shell: |
+      curl -s http://169.254.169.254/latest/meta-data/public-hostname
+    args:
+      warn: false
+    register: public_dns
+  
+  - name: Copy Kubelet cert files
+    shell: |
+      cp {{ public_dns.stdout }}-key.pem {{ public_dns.stdout }}.pem /var/lib/kubelet/
+      cp {{ public_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
+      cp ca.pem /var/lib/kubernetes/
+    args:
+      warn: false
+    become: yes
+
+  - name: Create kubelet config yaml file
+    template:
+      src: "09_kubelet_config_yaml.template"
+      dest: "/var/lib/kubelet/kubelet-config.yaml"
+    become: yes
+
+  - name: Create kubelet service file
+    template:
+      src: "09_kubelet_service.template"
+      dest: "/etc/systemd/system/kubelet.service"
+    become: yes  
+
+# Configure Kubernetes Proxy 
+
+  - name: Move kube proxy kubeconfig
+    shell: cp /home/ubuntu/kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
+    become: yes
+
+  - name: Create kube proxy config yaml file
+    template:
+      src: "09_kube_proxy_config_yaml.template"
+      dest: "/var/lib/kube-proxy/kube-proxy-config.yaml"
+    become: yes
+
+  - name: Create kube proxy service file
+    template:
+      src: "09_kube_proxy_service.template"
+      dest: "/etc/systemd/system/kube-proxy.service"
+    become: yes
+
+  - name: Start the Worker Services
+    shell: |
+      systemctl daemon-reload 
+      systemctl enable containerd kubelet kube-proxy
+      systemctl stop containerd kubelet kube-proxy
+      systemctl start containerd kubelet kube-proxy
+    become: yes

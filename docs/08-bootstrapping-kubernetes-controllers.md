@@ -399,6 +399,7 @@ ANSIBLE:
 {
 sudo systemctl daemon-reload
 sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler
+sudo systemctl stop kube-apiserver kube-controller-manager kube-scheduler
 sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
 }
 ```
@@ -434,7 +435,7 @@ KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-load
 Make a HTTP request for the Kubernetes version info:
 
 ```
-curl -k --cacert ca.pem https://${KUBERNETES_PUBLIC_ADDRESS}/version
+curl -k --cacert ca.pem https://"${KUBERNETES_PUBLIC_ADDRESS}"/version
 ```
 
 > output

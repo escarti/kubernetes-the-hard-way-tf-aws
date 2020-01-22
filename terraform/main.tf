@@ -26,7 +26,7 @@ resource "aws_key_pair" "kube_auth" {
 
 ## -- VPC --
 resource "aws_vpc" "kube_vpc" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = "10.240.0.0/24"
   enable_dns_hostnames = true
 }
 
@@ -63,7 +63,7 @@ resource "aws_subnet" "kube_public_subnet" {
   count = length(data.aws_availability_zones.available.names)
 
   vpc_id                  = aws_vpc.kube_vpc.id
-  cidr_block              = cidrsubnet(aws_vpc.kube_vpc.cidr_block, 8, count.index)
+  cidr_block              = cidrsubnet(aws_vpc.kube_vpc.cidr_block, 4, count.index)
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[count.index]
 
@@ -144,7 +144,7 @@ resource "aws_instance" "kube_controller" {
   tags = {
     Name = "kube_controller_${count.index}_instance"
   }
-
+  user_data              = "name=controller-${count.index}"
   key_name               = aws_key_pair.kube_auth.id
   vpc_security_group_ids = [aws_security_group.kube_web_open_sg.id]
   subnet_id              = aws_subnet.kube_public_subnet[count.index].id
@@ -159,6 +159,8 @@ resource "aws_instance" "kube_worker" {
   tags = {
     Name = "kube_worker_${count.index}_instance"
   }
+
+  user_data = "name=worker-${count.index}|pod-cidr=10.200.${count.index}.0/24"
 
   key_name               = aws_key_pair.kube_auth.id
   vpc_security_group_ids = [aws_security_group.kube_web_open_sg.id]
@@ -180,17 +182,11 @@ resource "aws_lb_target_group" "kube_controller_target_group" {
   name     = "kube-controller-tg"
   port     = 6443
   protocol = "TCP"
-  vpc_id   = aws_vpc.kube_vpc.id 
-
-  # health_check {
-  #   enabled = true
-  #   path    = "/health-check"
-  #   matcher = "200,204"
-  # }
+  vpc_id   = aws_vpc.kube_vpc.id
 }
 
 resource "aws_lb_target_group_attachment" "hf_lb_instance_attachment" {
-  count=length(aws_instance.kube_controller)
+  count = length(aws_instance.kube_controller)
 
   target_group_arn = aws_lb_target_group.kube_controller_target_group.arn
   target_id        = aws_instance.kube_controller[count.index].id
