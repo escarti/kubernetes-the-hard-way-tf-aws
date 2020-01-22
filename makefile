@@ -12,6 +12,12 @@ ssh_agent:
 	eval 'ssh-agent -s'
 	ssh-add ~/.ssh/kube_the_hard_way
 
+init:
+	@echo Initial commands to start working: Get temp AWS credentials and add key to the ssh agent.
+	saml2aws login --force --profile=kube-the-hard-way
+	eval 'ssh-agent -s'
+	ssh-add ~/.ssh/kube_the_hard_way
+
 all:
 	@echo Do all
 	saml2aws login --force --profile=kube-the-hard-way
@@ -24,4 +30,5 @@ all:
 	&& ./../scripts/05_generate_kubeconfig_files.sh\
 	&& ./../scripts/05_distribute_kubeconfig_files.sh\
 	&& ./../scripts/06_generate_distribute_encryption_keys.sh\
-	&& ./../scripts/07_bootstrap_etcd_cluster.sh
+	&& ./../scripts/07_bootstrap_etcd_cluster.sh\
+	&& ./../scripts/08_bootstrap_controllers.sh

@@ -1,18 +1,17 @@
 #!/bin/bash
 
-KUBERNETES_PRIVATE_ADDRESS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
- "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
-  "Reservations[].Instances[].PrivateIpAddress" --output text)
+KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer"\
+ --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 
-AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
- "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
-PUBLIC_DNS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].PublicDnsName') 
+PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1\
+ | jq -r '.Reservations[].Instances[].PublicDnsName')
 
 for instance in $PUBLIC_DNS; do
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \
     --embed-certs=true \
-    --server=https://${KUBERNETES_PRIVATE_ADDRESS}:6443 \
+    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:443 \
     --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-credentials system:node:${instance} \
@@ -32,7 +31,7 @@ done
 kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \
     --embed-certs=true \
-    --server=https://${KUBERNETES_PRIVATE_ADDRESS}:6443 \
+    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:443 \
     --kubeconfig=kube-proxy.kubeconfig
 
 kubectl config set-credentials system:kube-proxy \

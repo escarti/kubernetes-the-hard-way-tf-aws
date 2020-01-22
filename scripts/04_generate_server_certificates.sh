@@ -6,17 +6,13 @@ MASTER_PRIVATE_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.I
 MASTER_DNS_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
 MASTER_PUBLIC_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
 
-AWS_ALB_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_api_load_balancer_*instance"\
- "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
-ALB_PRIVATE_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
-ALB_DNS_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
-ALB_PUBLIC_IP_LIST=$(echo $AWS_ALB_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
+KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer" --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 
 
 CERT_HOSTNAME=10.32.0.1,$MASTER_PRIVATE_IP_LIST,\
 $MASTER_DNS_LIST,$MASTER_PUBLIC_IP_LIST,127.0.0.1,localhost,kubernetes,kubernetes.default,\
 kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local,\
-$ALB_PRIVATE_IP_LIST,$ALB_DNS_LIST,$ALB_PUBLIC_IP_LIST
+$KUBERNETES_PUBLIC_ADDRESS
 
 cat > kubernetes-csr.json << EOF
 {

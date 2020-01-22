@@ -165,44 +165,45 @@ resource "aws_instance" "kube_worker" {
   subnet_id              = aws_subnet.kube_public_subnet[count.index].id
 }
 
-resource "aws_instance" "kube_load_balancer" {
+resource "aws_lb" "kube_loadbalancer" {
+  name               = "kube-loadbalancer"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = [for subnet in aws_subnet.kube_public_subnet : subnet.id]
 
-  instance_type = var.instance_type
-  ami           = var.ami_type
+  enable_deletion_protection = false
 
-  tags = {
-    Name = "kube_api_load_balancer_instance"
-  }
-
-  key_name               = aws_key_pair.kube_auth.id
-  vpc_security_group_ids = [aws_security_group.kube_web_open_sg.id]
-  subnet_id              = aws_subnet.kube_public_subnet[0].id
-
+  depends_on = [aws_instance.kube_controller]
 }
 
-resource "null_resource" "ansible_provisioner_file" {
-  depends_on = [aws_instance.kube_load_balancer, aws_instance.kube_worker, aws_instance.kube_controller]
+resource "aws_lb_target_group" "kube_controller_target_group" {
+  name     = "kube-controller-tg"
+  port     = 6443
+  protocol = "TCP"
+  vpc_id   = aws_vpc.kube_vpc.id 
 
-  provisioner "local-exec" {
-    command = <<EOD
-cat <<EOF > aws_hosts.yml
----
-all:
-  children:
+  # health_check {
+  #   enabled = true
+  #   path    = "/health-check"
+  #   matcher = "200,204"
+  # }
+}
 
-    controller:
-      hosts:
-        ${join("\n\t\t\t\t", aws_instance.kube_controller.*.public_ip)}
-    
-    workers:
-      hosts:
-        ${join("\n\t\t\t\t", aws_instance.kube_worker.*.public_ip)}
+resource "aws_lb_target_group_attachment" "hf_lb_instance_attachment" {
+  count=length(aws_instance.kube_controller)
 
-    api_lb:
-      hosts:
-        ${join("\n\t\t\t\t", aws_instance.kube_load_balancer.*.public_ip)}
-            
-EOF
-EOD
+  target_group_arn = aws_lb_target_group.kube_controller_target_group.arn
+  target_id        = aws_instance.kube_controller[count.index].id
+  port             = 6443
+}
+
+resource "aws_lb_listener" "kube_port443_listener" {
+  load_balancer_arn = aws_lb.kube_loadbalancer.arn
+  port              = "443"
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.kube_controller_target_group.arn
   }
 }

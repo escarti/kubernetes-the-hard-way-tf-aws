@@ -32,13 +32,17 @@ Now ssh into each one of the IP addresses received in last step.
 
 We will use ansible to remotely connect and configure all of them at once.
 
-You can use the aws_controller_hosts.yml inventory file from last step, but in case you lost it, just create a new one by running:
+First create the inventory file by running:
 
 ```
 {
 PUBLIC_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicIpAddress")
 
 PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PrivateIpAddress")
+
+PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName")
+
+PUBLIC_CONTROLLER_IPS=($(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]"))
 
 ETCD_CLUSTER_SETTING=""
 declare -i i=0
@@ -417,77 +421,14 @@ etcd-1               Healthy   {"health":"true"}
 ```
 Yay !!! - Controllers are up
 
-## RBAC for Kubelet Authorization
-
-In this section you will configure RBAC permissions to allow the Kubernetes API Server to access the Kubelet API on each worker node. Access to the Kubelet API is required for retrieving metrics, logs, and executing commands in pods.
-
-> This tutorial sets the Kubelet `--authorization-mode` flag to `Webhook`. Webhook mode uses the [SubjectAccessReview](https://kubernetes.io/docs/admin/authorization/#checking-api-access) API to determine authorization.
-
-```
-external_ip=$(aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=controller-0" \
-    --output text --query 'Reservations[].Instances[].PublicIpAddress')
-
-ssh -i kubernetes.id_rsa ubuntu@${external_ip}
-```
-
-Create the `system:kube-apiserver-to-kubelet` [ClusterRole](https://kubernetes.io/docs/admin/authorization/rbac/#role-and-clusterrole) with permissions to access the Kubelet API and perform most common tasks associated with managing pods:
-
-```
-cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: "true"
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-  name: system:kube-apiserver-to-kubelet
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/proxy
-      - nodes/stats
-      - nodes/log
-      - nodes/spec
-      - nodes/metrics
-    verbs:
-      - "*"
-EOF
-```
-
-The Kubernetes API Server authenticates to the Kubelet as the `kubernetes` user using the client certificate as defined by the `--kubelet-client-certificate` flag.
-
-Bind the `system:kube-apiserver-to-kubelet` ClusterRole to the `kubernetes` user:
-
-```
-cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:kube-apiserver
-  namespace: ""
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:kube-apiserver-to-kubelet
-subjects:
-  - apiGroup: rbac.authorization.k8s.io
-    kind: User
-    name: kubernetes
-EOF
-```
-
 ### Verification of cluster public endpoint - From your laptop
 
 Run this command on the machine from where you started setup (e.g. Your personal laptop)
 Retrieve the `kubernetes-the-hard-way` Load Balancer address:
 
 ```
-KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
-  --load-balancer-arns ${LOAD_BALANCER_ARN} \
-  --output text --query 'LoadBalancers[].DNSName')
+KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer"\
+ --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 ```
 
 Make a HTTP request for the Kubernetes version info:
