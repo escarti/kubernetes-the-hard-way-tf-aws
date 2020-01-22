@@ -3,40 +3,44 @@
   remote_user: ubuntu
   tasks:
 
-    - name: Get etcd binaries
+    - name: 07.1 Get etcd binaries
       unarchive:
         src: https://github.com/etcd-io/etcd/releases/download/v3.4.0/etcd-v3.4.0-linux-amd64.tar.gz
         dest: /usr/local/bin/
         remote_src: yes
       become: yes
 
-    - name: Move etcd binaries
+    - name: 07.2 Move etcd binaries
       shell: mv /usr/local/bin/etcd-v3.4.0-linux-amd64/etcd* /usr/local/bin/ && rm -rf /usr/local/bin/etcd-v3.4.0-linux-amd64/
       become: yes
     
-    - name: Creates directory /etc/etcd
+    - name: 07.3 Creates directory /etc/etcd
       file:
         path: /etc/etcd
         state: directory
       become: yes
 
-    - name: Creates directory /var/lib/etcd
+    - name: 07.4 Creates directory /var/lib/etcd
       file:
         path: /var/lib/etcd
         state: directory
       become: yes
     
-    - name: Move etcd certificates
+    - name: 07.5 Move etcd certificates
       shell: cp /home/ubuntu/ca.pem /home/ubuntu/kubernetes-key.pem /home/ubuntu/kubernetes.pem /etc/etcd/
       become: yes
     
-    - name: Create service file
+    - name: 07.6 Create service file
       template:
         src: "07_etcd_service.template"
         dest: "/etc/systemd/system/etcd.service"
       become: yes
 
-    - name: Start the etcd Server
-      shell: systemctl daemon-reload && systemctl enable etcd && sudo systemctl stop etcd && systemctl start etcd
+    - name: 07.7 Start the etcd Server
+      shell: |
+        systemctl daemon-reload 
+        systemctl enable etcd 
+        sudo systemctl stop etcd 
+        systemctl start etcd
       become: yes
     

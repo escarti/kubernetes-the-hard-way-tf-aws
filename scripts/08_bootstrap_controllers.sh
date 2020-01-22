@@ -44,4 +44,4 @@ ansible-playbook -i aws_controller_hosts.yml ../scripts/08_bootstrap_controllers
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer"\
  --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 
-curl -k --cacert ca.pem https://${KUBERNETES_PUBLIC_ADDRESS}/version
+curl -k --cacert ca.pem https://"${KUBERNETES_PUBLIC_ADDRESS}"/version

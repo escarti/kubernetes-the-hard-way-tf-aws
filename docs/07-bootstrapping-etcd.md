@@ -246,7 +246,11 @@ ANSIBLE:
 
 ```
     - name: Start the etcd Server
-      shell: systemctl daemon-reload && systemctl enable etcd && systemctl start etcd
+      shell: |
+        systemctl daemon-reload 
+        systemctl enable etcd 
+        sudo systemctl stop etcd 
+        systemctl start etcd
       become: yes
 ```
 
@@ -267,9 +271,9 @@ sudo ETCDCTL_API=3 etcdctl member list \
 > output should look something like this
 
 ```
-c1d5f629d85f8cbe, started, ec2-3-124-5-160.eu-central-1.compute.amazonaws.com, https://10.0.1.221:2380, https://10.0.1.221:2379, false
-d45b3d2eee9e9641, started, ec2-18-197-88-137.eu-central-1.compute.amazonaws.com, https://10.0.0.179:2380, https://10.0.0.179:2379, false
-e519dfc3b0113b31, started, ec2-3-125-119-233.eu-central-1.compute.amazonaws.com, https://10.0.2.238:2380, https://10.0.2.238:2379, false
+2cce75a6dfa987e2, started, ec2-18-184-218-69.eu-central-1.compute.amazonaws.com, https://10.240.0.42:2380, https://10.240.0.42:2379, false
+5e3509fb8e8c6cae, started, ec2-35-158-73-102.eu-central-1.compute.amazonaws.com, https://10.240.0.14:2380, https://10.240.0.14:2379, false
+89c354118a6e6b7b, started, ec2-35-157-97-179.eu-central-1.compute.amazonaws.com, https://10.240.0.28:2380, https://10.240.0.28:2379, false
 ```
 
 Next: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)

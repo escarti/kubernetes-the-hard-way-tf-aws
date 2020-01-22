@@ -31,4 +31,6 @@ all:
 	&& ./../scripts/05_distribute_kubeconfig_files.sh\
 	&& ./../scripts/06_generate_distribute_encryption_keys.sh\
 	&& ./../scripts/07_bootstrap_etcd_cluster.sh\
-	&& ./../scripts/08_bootstrap_controllers.sh
+	&& ./../scripts/08_bootstrap_controllers.sh\
+	&& ./../scripts/09-bootstrapping-kubernetes-workers.sh\
+	&& ./../scripts/10-configuring-kubectl.sh

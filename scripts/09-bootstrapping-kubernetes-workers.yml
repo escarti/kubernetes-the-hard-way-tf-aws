@@ -3,7 +3,7 @@
   remote_user: ubuntu
   tasks:
 
-  - name: Update the repository cache and install socat, conntrack and ipset
+  - name: 09.1 Update the repository cache and install socat, conntrack and ipset
     apt:
       pkg:
         - socat
@@ -12,7 +12,7 @@
       update_cache: yes
     become: yes
 
-  - name: Create directories
+  - name: 09.2 Create directories
     file:
       path: "{{item}}"
       state: directory
@@ -26,7 +26,7 @@
       - "/var/run/kubernetes"
       - "/etc/containerd"
 
-  - name: Download files
+  - name: 09.3 Download files
     get_url:
       url: "{{ item }}"
       dest: /usr/local/bin/
@@ -34,64 +34,64 @@
     with_items:
       - "https://storage.googleapis.com/kubernetes-the-hard-way/runsc"
       - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kube-proxy"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubelet"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-proxy"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubelet"
     become: yes
 
-  - name: Rename runc.amd64 to runc
+  - name: 09.4 Rename runc.amd64 to runc
     shell: cp /usr/local/bin/runc.amd64 /usr/local/bin/runc
     become: yes
 
-  - name: Download and untar crictl
+  - name: 09.5 Download and untar crictl
     unarchive:
-      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.13.0/crictl-v1.13.0-linux-amd64.tar.gz"
+      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.15.0/crictl-v1.15.0-linux-amd64.tar.gz"
       dest: /usr/local/bin/
       remote_src: yes
     become: yes
   
-  - name: Download and untar containerd
+  - name: 09.6 Download and untar containerd
     unarchive:
-      src: "https://github.com/containerd/containerd/releases/download/v1.2.0-beta.2/containerd-1.2.0-beta.2.linux-amd64.tar.gz"
+      src: "https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz"
       dest: /
       remote_src: yes
     become: yes
 
-  - name: Download and untar cni-plugins
+  - name: 09.7 Download and untar cni-plugins
     unarchive:
-      src: "https://github.com/containerd/containerd/releases/download/v1.2.0-beta.2/containerd-1.2.0-beta.2.linux-amd64.tar.gz"
+      src: "https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz"
       dest: /opt/cni/
       remote_src: yes
     become: yes
 
 # Configure Containerd
 
-  - name: Get Pod-Cidr
+  - name: 09.8 Get Pod-Cidr
     shell: |
       curl -s http://169.254.169.254/latest/user-data/ | tr "|" "\n" | grep "^pod-cidr" | cut -d"=" -f2
     args:
       warn: false
     register: pod_cidr
   
-  - name: Create CNI bridge file
+  - name: 09.9 Create CNI bridge file
     template:
       src: "09_bridge_conf.template"
       dest: "/etc/cni/net.d/10-bridge.conf"
     become: yes
 
-  - name: Create CNI loopback service file
+  - name: 09.10 Create CNI loopback service file
     template:
       src: "09_loopback_conf.template"
       dest: "/etc/cni/net.d/99-loopback.conf"
     become: yes
   
-  - name: Create containerd config file
+  - name: 09.11 Create containerd config file
     template:
       src: "09_containerd_config.template"
       dest: "/etc/containerd/config.toml"
     become: yes
 
-  - name: Create containerd service file
+  - name: 09.12 Create containerd service file
     template:
       src: "09_containerd_service.template"
       dest: "/etc/systemd/system/containerd.service"
@@ -99,14 +99,14 @@
 
 # Configure Kubelet
 
-  - name: Get DNS-name
+  - name: 09.13 Get DNS-name
     shell: |
       curl -s http://169.254.169.254/latest/meta-data/public-hostname
     args:
       warn: false
     register: public_dns
   
-  - name: Copy Kubelet cert files
+  - name: 09.14 Copy Kubelet cert files
     shell: |
       cp {{ public_dns.stdout }}-key.pem {{ public_dns.stdout }}.pem /var/lib/kubelet/
       cp {{ public_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
@@ -115,13 +115,13 @@
       warn: false
     become: yes
 
-  - name: Create kubelet config yaml file
+  - name: 09.15 Create kubelet config yaml file
     template:
       src: "09_kubelet_config_yaml.template"
       dest: "/var/lib/kubelet/kubelet-config.yaml"
     become: yes
 
-  - name: Create kubelet service file
+  - name: 09.16 Create kubelet service file
     template:
       src: "09_kubelet_service.template"
       dest: "/etc/systemd/system/kubelet.service"
@@ -129,23 +129,23 @@
 
 # Configure Kubernetes Proxy 
 
-  - name: Move kube proxy kubeconfig
+  - name: 09.17 Move kube proxy kubeconfig
     shell: cp /home/ubuntu/kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
     become: yes
 
-  - name: Create kube proxy config yaml file
+  - name: 09.18 Create kube proxy config yaml file
     template:
       src: "09_kube_proxy_config_yaml.template"
       dest: "/var/lib/kube-proxy/kube-proxy-config.yaml"
     become: yes
 
-  - name: Create kube proxy service file
+  - name: 09.19 Create kube proxy service file
     template:
       src: "09_kube_proxy_service.template"
       dest: "/etc/systemd/system/kube-proxy.service"
     become: yes
 
-  - name: Start the Worker Services
+  - name: 09.20 Start the Worker Services
     shell: |
       systemctl daemon-reload 
       systemctl enable containerd kubelet kube-proxy

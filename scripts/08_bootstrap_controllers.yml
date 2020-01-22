@@ -3,89 +3,89 @@
   remote_user: ubuntu
   tasks:
 
-    - name: Creates directory /etc/kubernetes/config
+    - name: 08.1 Creates directory /etc/kubernetes/config
       file:
         path: /etc/kubernetes/config
         state: directory
       become: yes
     
-    - name: Download kube-apiserver
+    - name: 08.2 Download kube-apiserver
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kube-apiserver
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-apiserver
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
-    - name: Download kube-controller-manager
+    - name: 08.3 Download kube-controller-manager
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kube-controller-manager
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-controller-manager
         dest: /usr/local/bin/
         mode: a+x
       become: yes
     
-    - name: Download kube-scheduler
+    - name: 08.4 Download kube-scheduler
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kube-scheduler
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-scheduler
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
-    - name: Download kubectl
+    - name: 08.5 Download kubectl
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl
         dest: /usr/local/bin/
         mode: a+x
       become: yes
     
-    - name: Creates directory /var/lib/kubernetes/
+    - name: 08.6 Creates directory /var/lib/kubernetes/
       file:
         path: /var/lib/kubernetes/
         state: directory
       become: yes
     
-    - name: Move certificates
+    - name: 08.7 Move certificates
       shell: cp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem service-account-key.pem service-account.pem encryption-config.yaml /var/lib/kubernetes/        
       args:
         chdir: /home/ubuntu/
       become: yes
     
-    - name: Create kube-apiserver service file
+    - name: 08.8 Create kube-apiserver service file
       template:
         src: "08_kube_apiserver.template"
         dest: "/etc/systemd/system/kube-apiserver.service"
       become: yes
     
-    - name: Move the 'kube-controller-manager' kubeconfig into place
+    - name: 08.9 Move the 'kube-controller-manager' kubeconfig into place
       shell: cp kube-controller-manager.kubeconfig /var/lib/kubernetes/        
       args:
         chdir: /home/ubuntu/
       become: yes
     
-    - name: Create kube-controller-manager service file
+    - name: 08.10 Create kube-controller-manager service file
       template:
         src: "08_kube_controller_manager.template"
         dest: "/etc/systemd/system/kube-controller-manager.service"
       become: yes
     
-    - name: Move the 'kube-scheduler' kubeconfig into place
+    - name: 08.11 Move the 'kube-scheduler' kubeconfig into place
       shell: cp kube-scheduler.kubeconfig /var/lib/kubernetes/       
       args:
         chdir: /home/ubuntu/
       become: yes
     
-    - name: Create kube-scheduler.yaml file
+    - name: 08.12 Create kube-scheduler.yaml file
       template:
         src: "08_kube_scheduler_yaml.template"
         dest: "/etc/kubernetes/config/kube-scheduler.yaml"
       become: yes
     
-    - name: Create kube-scheduler service file
+    - name: 08.13 Create kube-scheduler service file
       template:
         src: "08_kube_scheduler_service.template"
         dest: "/etc/systemd/system/kube-scheduler.service"
       become: yes
     
-    - name: Start the Controller Services
+    - name: 08.14 Start the Controller Services
       shell: |
         systemctl daemon-reload 
         systemctl enable kube-apiserver kube-controller-manager kube-scheduler
