@@ -32,7 +32,7 @@
     
     - name: 07.6 Create service file
       template:
-        src: "07_etcd_service.template"
+        src: "template_files/07_etcd_service.template"
         dest: "/etc/systemd/system/etcd.service"
       become: yes
 

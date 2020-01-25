@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 05. DISTRIBUTE KUBECONFIG"
+
 # Workers
 
 PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
@@ -7,7 +9,7 @@ PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_wor
  "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
 
 for instance in $PUBLIC_DNS; do
-  scp -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
+  scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
 done
 
 # Controllers
@@ -17,6 +19,6 @@ PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_con
  --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
 
 for instance in $PUBLIC_DNS; do
-    scp -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
  kube-scheduler.kubeconfig ubuntu@${instance}:~/
 done

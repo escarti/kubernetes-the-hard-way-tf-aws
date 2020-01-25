@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 06. GENERATE AND DISTRIBUTE ENCRYPTION KEY"
+
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 
 cat > encryption-config.yaml <<EOF
@@ -21,5 +23,5 @@ PUBLIC_DNS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_con
   --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]")
 
 for instance in $PUBLIC_DNS; do
-    scp -i ~/.ssh/kube_the_hard_way encryption-config.yaml ubuntu@${instance}:~/
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way encryption-config.yaml ubuntu@${instance}:~/
 done

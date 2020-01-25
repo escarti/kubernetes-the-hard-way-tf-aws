@@ -77,7 +77,7 @@ resource "aws_security_group" "kube_web_open_sg" {
   description = "Security group for open to the internet"
   name        = "kube_web_open_sg"
 
-  #SSH 
+  #SSH TO CONNECT TO INSTANCES
   ingress {
     description = "Incoming ssh"
     from_port   = 22
@@ -85,34 +85,19 @@ resource "aws_security_group" "kube_web_open_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  #HTTP
+
+  #All open for self
   ingress {
-    description = "Standard http incoming"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "All open for my SG"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    self        = true
   }
 
-  #HTTPS
+  #FOR LOAD BALANCER INCOMING 
   ingress {
     description = "Standard https incoming"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "ETCD port opening"
-    from_port   = 2379
-    to_port     = 2380
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Kubernetes config"
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
@@ -127,7 +112,7 @@ resource "aws_security_group" "kube_web_open_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-## -- Subnet and Rout tabel association
+## -- Subnet and Route tabel association
 resource "aws_route_table_association" "kube_public_assoc" {
   count          = length(aws_subnet.kube_public_subnet)
   subnet_id      = aws_subnet.kube_public_subnet[count.index].id
@@ -157,7 +142,8 @@ resource "aws_instance" "kube_worker" {
   ami           = var.ami_type
 
   tags = {
-    Name = "kube_worker_${count.index}_instance"
+    Name     = "kube_worker_${count.index}_instance"
+    Pod_Cidr = "10.200.${count.index}.0/24"
   }
 
   user_data = "name=worker-${count.index}|pod-cidr=10.200.${count.index}.0/24"
@@ -202,4 +188,15 @@ resource "aws_lb_listener" "kube_port443_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.kube_controller_target_group.arn
   }
+}
+
+# Add routing for POD-CIDR to the corresponding worker
+
+resource "aws_route" "kube_pod_cidr_route" {
+  count = length(aws_instance.kube_worker)
+
+  route_table_id         = aws_route_table.kube_public_rt.id
+  destination_cidr_block = aws_instance.kube_worker[count.index].tags["Pod_Cidr"]
+  instance_id            = aws_instance.kube_worker[count.index].id
+
 }

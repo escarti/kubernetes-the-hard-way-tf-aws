@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 05. GENERATE KUBECONFIG"
+
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer"\
  --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 04. GENERATE SERVER CERTIFICATES"
+
 AWS_MASTER_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 MASTER_PRIVATE_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')

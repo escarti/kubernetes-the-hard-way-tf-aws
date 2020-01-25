@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 04. GENERATE CLIENT CERTIFICATES"
+
 # Certificate Authority
 
 cat > ca-config.json <<EOF

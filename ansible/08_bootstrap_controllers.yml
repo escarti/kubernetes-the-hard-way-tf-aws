@@ -51,7 +51,7 @@
     
     - name: 08.8 Create kube-apiserver service file
       template:
-        src: "08_kube_apiserver.template"
+        src: "template_files/08_kube_apiserver.template"
         dest: "/etc/systemd/system/kube-apiserver.service"
       become: yes
     
@@ -63,7 +63,7 @@
     
     - name: 08.10 Create kube-controller-manager service file
       template:
-        src: "08_kube_controller_manager.template"
+        src: "template_files/08_kube_controller_manager.template"
         dest: "/etc/systemd/system/kube-controller-manager.service"
       become: yes
     
@@ -75,13 +75,13 @@
     
     - name: 08.12 Create kube-scheduler.yaml file
       template:
-        src: "08_kube_scheduler_yaml.template"
+        src: "template_files/08_kube_scheduler_yaml.template"
         dest: "/etc/kubernetes/config/kube-scheduler.yaml"
       become: yes
     
     - name: 08.13 Create kube-scheduler service file
       template:
-        src: "08_kube_scheduler_service.template"
+        src: "template_files/08_kube_scheduler_service.template"
         dest: "/etc/systemd/system/kube-scheduler.service"
       become: yes
     

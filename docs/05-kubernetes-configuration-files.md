@@ -208,7 +208,7 @@ Copy the appropriate `kubelet` and `kube-proxy` kubeconfig files to each worker 
 PUBLIC_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]"))
 
 for instance in $PUBLIC_DNS; do
-  scp -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
+  scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
 done
 ```
 
@@ -219,7 +219,7 @@ Copy the appropriate `kube-controller-manager` and `kube-scheduler` kubeconfig f
 PUBLIC_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query "Reservations[].Instances[].PublicDnsName" | jq -r ".[]"))
 
 for instance in $PUBLIC_DNS; do
-    scp -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way admin.kubeconfig kube-controller-manager.kubeconfig\
  kube-scheduler.kubeconfig ubuntu@${instance}:~/
 done
 }

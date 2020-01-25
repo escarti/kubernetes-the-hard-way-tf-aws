@@ -59,8 +59,8 @@
 
   - name: 09.7 Download and untar cni-plugins
     unarchive:
-      src: "https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz"
-      dest: /opt/cni/
+      src: "https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz"
+      dest: /opt/cni/bin/
       remote_src: yes
     become: yes
 
@@ -75,25 +75,25 @@
   
   - name: 09.9 Create CNI bridge file
     template:
-      src: "09_bridge_conf.template"
+      src: "template_files/09_bridge_conf.template"
       dest: "/etc/cni/net.d/10-bridge.conf"
     become: yes
 
   - name: 09.10 Create CNI loopback service file
     template:
-      src: "09_loopback_conf.template"
+      src: "template_files/09_loopback_conf.template"
       dest: "/etc/cni/net.d/99-loopback.conf"
     become: yes
   
   - name: 09.11 Create containerd config file
     template:
-      src: "09_containerd_config.template"
+      src: "template_files/09_containerd_config.template"
       dest: "/etc/containerd/config.toml"
     become: yes
 
   - name: 09.12 Create containerd service file
     template:
-      src: "09_containerd_service.template"
+      src: "template_files/09_containerd_service.template"
       dest: "/etc/systemd/system/containerd.service"
     become: yes
 
@@ -117,13 +117,13 @@
 
   - name: 09.15 Create kubelet config yaml file
     template:
-      src: "09_kubelet_config_yaml.template"
+      src: "template_files/09_kubelet_config_yaml.template"
       dest: "/var/lib/kubelet/kubelet-config.yaml"
     become: yes
 
   - name: 09.16 Create kubelet service file
     template:
-      src: "09_kubelet_service.template"
+      src: "template_files/09_kubelet_service.template"
       dest: "/etc/systemd/system/kubelet.service"
     become: yes  
 
@@ -135,13 +135,13 @@
 
   - name: 09.18 Create kube proxy config yaml file
     template:
-      src: "09_kube_proxy_config_yaml.template"
+      src: "template_files/09_kube_proxy_config_yaml.template"
       dest: "/var/lib/kube-proxy/kube-proxy-config.yaml"
     become: yes
 
   - name: 09.19 Create kube proxy service file
     template:
-      src: "09_kube_proxy_service.template"
+      src: "template_files/09_kube_proxy_service.template"
       dest: "/etc/systemd/system/kube-proxy.service"
     become: yes
 

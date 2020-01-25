@@ -1,4 +1,4 @@
-.PHONY: no_targets__ aws_login, ssh_agent
+.PHONY: no_targets__ aws_login, ssh_agent, init, create_infra, destroy_and_clean, all
 
 no_targets__:
 	@echo You must indicate a target, please see the Makefile for valid parameters to this makefile
@@ -17,13 +17,26 @@ init:
 	saml2aws login --force --profile=kube-the-hard-way
 	eval 'ssh-agent -s'
 	ssh-add ~/.ssh/kube_the_hard_way
+	cd terraform && terraform init
+
+create_infra:
+	@echo Create the infrastructure from scratch
+	saml2aws login --profile=kube-the-hard-way
+	cd terraform && terraform apply -auto-approve 
+
+destroy_and_clean:
+	@echo Destroy infrastructure and clean tmp files 
+	saml2aws login --profile=kube-the-hard-way
+	cd terraform && terraform destroy
+	cd tmp && rm *
 
 all:
 	@echo Do all
-	saml2aws login --force --profile=kube-the-hard-way
+	saml2aws login --profile=kube-the-hard-way
 	eval 'ssh-agent -s'
 	ssh-add ~/.ssh/kube_the_hard_way
-	mkdir -p tmp 
+	mkdir -p tmp
+	cp ansible.cfg tmp/ansible.cfg
 	cd tmp && ./../scripts/04_generate_client_certificates.sh\
   	&& ./../scripts/04_generate_server_certificates.sh\
   	&& ./../scripts/04_distribute_certificate_files.sh\
