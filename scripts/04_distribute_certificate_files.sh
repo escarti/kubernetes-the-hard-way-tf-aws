@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "-- 04. DISTRIBUTE CERTIFICATES"
+
 # Workers
 
 AWS_WORKER_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\

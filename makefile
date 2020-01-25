@@ -46,4 +46,5 @@ all:
 	&& ./../scripts/07_bootstrap_etcd_cluster.sh\
 	&& ./../scripts/08_bootstrap_controllers.sh\
 	&& ./../scripts/09-bootstrapping-kubernetes-workers.sh\
-	&& ./../scripts/10-configuring-kubectl.sh
+	&& ./../scripts/10-configuring-kubectl.sh\
+	&& ./../scripts/12-dns-addon.sh

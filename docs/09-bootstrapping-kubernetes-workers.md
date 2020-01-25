@@ -397,11 +397,14 @@ clusterDomain: "cluster.local"
 clusterDNS:
   - "10.32.0.10"
 podCIDR: "${POD_CIDR}"
+resolvConf: "/etc/resolv.conf"
 runtimeRequestTimeout: "15m"
 tlsCertFile: "/var/lib/kubelet/${WORKER_NAME}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/${WORKER_NAME}-key.pem"
 EOF
 ```
+
+> The `resolvConf` configuration is used to avoid loops when using CoreDNS for service discovery on systems running `systemd-resolved`. 
 
 Create the `kubelet.service` systemd unit file:
 
