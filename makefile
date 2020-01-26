@@ -17,7 +17,6 @@ init:
 	saml2aws login --force --profile=kube-the-hard-way
 	eval 'ssh-agent -s'
 	ssh-add ~/.ssh/kube_the_hard_way
-	cd terraform && terraform init
 
 create_infra:
 	@echo Create the infrastructure from scratch

@@ -95,6 +95,15 @@ resource "aws_security_group" "kube_web_open_sg" {
     self        = true
   }
 
+  ingress {
+    description = "All open for my SG"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["10.200.0.0/16"]
+  }
+
+
   #FOR LOAD BALANCER INCOMING 
   ingress {
     description = "Standard https incoming"

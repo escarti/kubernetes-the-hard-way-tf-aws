@@ -33,10 +33,10 @@
       mode: a+x
     with_items:
       - "https://storage.googleapis.com/kubernetes-the-hard-way/runsc"
-      - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-proxy"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubelet"
+      - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc10/runc.amd64"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-proxy"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubelet"
     become: yes
 
   - name: 09.4 Rename runc.amd64 to runc
@@ -45,14 +45,14 @@
 
   - name: 09.5 Download and untar crictl
     unarchive:
-      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.15.0/crictl-v1.15.0-linux-amd64.tar.gz"
+      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.17.0/crictl-v1.17.0-linux-amd64.tar.gz"
       dest: /usr/local/bin/
       remote_src: yes
     become: yes
   
   - name: 09.6 Download and untar containerd
     unarchive:
-      src: "https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz"
+      src: "https://github.com/containerd/containerd/releases/download/v1.3.2/containerd-1.3.2.linux-amd64.tar.gz"
       dest: /
       remote_src: yes
     become: yes
@@ -149,7 +149,6 @@
     shell: |
       systemctl daemon-reload 
       systemctl enable containerd kubelet kube-proxy
-      sudo systemctl restart systemd-resolved
       systemctl stop containerd kubelet kube-proxy
       systemctl start containerd kubelet kube-proxy
     become: yes

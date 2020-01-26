@@ -6,7 +6,7 @@ variable "aws_profile" {
 }
 variable "ami_type" {
   # Ubuntu 16.04 ami
-  default = "ami-050a22b7e0cf85dd0"
+  default = "ami-0cc0a36f626a4fdf5"
 }
 variable "instance_type" {
   default = "t2.micro"

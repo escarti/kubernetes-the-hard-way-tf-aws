@@ -135,10 +135,10 @@ SSH:
 
 ```
 wget -q --show-progress --https-only --timestamping \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-apiserver" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-controller-manager" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-scheduler" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl"
+  "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-apiserver" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-controller-manager" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-scheduler" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl"
 ```
 
 Install the Kubernetes binaries:
@@ -153,28 +153,28 @@ ANSIBLE:
 ```
     - name: Download kube-apiserver
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-apiserver
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-apiserver
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
     - name: Download kube-controller-manager
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-controller-manager
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-controller-manager
         dest: /usr/local/bin/
         mode: a+x
       become: yes
     
     - name: Download kube-scheduler
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-scheduler
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-scheduler
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
     - name: Download kubectl
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl
         dest: /usr/local/bin/
         mode: a+x
       become: yes
@@ -313,7 +313,7 @@ Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-controller-manager \\
-  --address=0.0.0.0 \\
+  --bind-address=0.0.0.0 \\
   --cluster-cidr=10.200.0.0/16 \\
   --cluster-name=kubernetes \\
   --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
@@ -525,7 +525,7 @@ curl -k --cacert ca.pem https://"${KUBERNETES_PUBLIC_ADDRESS}"/version
 {
   "major": "1",
   "minor": "15",
-  "gitVersion": "v1.15.3",
+  "gitVersion": "v1.17.2",
   "gitCommit": "2d3c76f9091b6bec110a5e63777c332469e0cba2",
   "gitTreeState": "clean",
   "buildDate": "2019-08-19T11:05:50Z",

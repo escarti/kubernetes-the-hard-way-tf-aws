@@ -11,28 +11,28 @@
     
     - name: 08.2 Download kube-apiserver
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-apiserver
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-apiserver
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
     - name: 08.3 Download kube-controller-manager
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-controller-manager
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-controller-manager
         dest: /usr/local/bin/
         mode: a+x
       become: yes
     
     - name: 08.4 Download kube-scheduler
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-scheduler
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-scheduler
         dest: /usr/local/bin/
         mode: a+x
       become: yes
 
     - name: 08.5 Download kubectl
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl
         dest: /usr/local/bin/
         mode: a+x
       become: yes

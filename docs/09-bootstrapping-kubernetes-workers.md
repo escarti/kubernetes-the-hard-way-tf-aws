@@ -144,14 +144,14 @@ SSH:
 
 ```
 wget -q --show-progress --https-only --timestamping \
-  https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.15.0/crictl-v1.15.0-linux-amd64.tar.gz \
+  https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.17.0/crictl-v1.17.0-linux-amd64.tar.gz \
   https://storage.googleapis.com/kubernetes-the-hard-way/runsc \
   https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
-  https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz \
-  https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz \
-  https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-proxy \
-  https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubelet
+  https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-amd64-v0.8.5.tgz \
+  https://github.com/containerd/containerd/releases/download/v1.3.2/containerd-1.3.2.linux-amd64.tar.gz \
+  https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl \
+  https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-proxy \
+  https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubelet
 ```
 
 Create the installation directories:
@@ -172,9 +172,9 @@ Install the worker binaries:
 chmod +x kubectl kube-proxy kubelet runc.amd64 runsc
 sudo mv runc.amd64 runc
 sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
-sudo tar -xvf crictl-v1.15.0-linux-amd64.tar.gz -C /usr/local/bin/
-sudo tar -xvf cni-plugins-amd64-v0.7.1.tgz -C /opt/cni/bin/
-sudo tar -xvf containerd-1.2.9.linux-amd64.tar.gz -C /
+sudo tar -xvf crictl-v1.17.0-linux-amd64.tar.gz -C /usr/local/bin/
+sudo tar -xvf cni-plugins-amd64-v0.8.5.tgz -C /opt/cni/bin/
+sudo tar -xvf containerd-1.3.2.linux-amd64.tar.gz -C /
 ```
 
 ANSIBLE:
@@ -201,9 +201,9 @@ ANSIBLE:
     with_items:
       - "https://storage.googleapis.com/kubernetes-the-hard-way/runsc"
       - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-proxy"
-      - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubelet"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-proxy"
+      - "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubelet"
     become: yes
 
   - name: Rename runc.amd64 to runc
@@ -212,21 +212,21 @@ ANSIBLE:
 
   - name: Download and untar crictl
     unarchive:
-      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.15.0/crictl-v1.15.0-linux-amd64.tar.gz"
+      src: "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.17.0/crictl-v1.17.0-linux-amd64.tar.gz"
       dest: /usr/local/bin/
       remote_src: yes
     become: yes
   
   - name: Download and untar containerd
     unarchive:
-      src: "https://github.com/containerd/containerd/releases/download/v1.2.9/containerd-1.2.9.linux-amd64.tar.gz"
+      src: "https://github.com/containerd/containerd/releases/download/v1.3.2/containerd-1.3.2.linux-amd64.tar.gz"
       dest: /
       remote_src: yes
     become: yes
 
   - name: Download and untar cni-plugins
     unarchive:
-      src: "https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz"
+      src: "https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-amd64-v0.8.5.tgz"
       dest: /opt/cni/
       remote_src: yes
     become: yes
@@ -396,7 +396,7 @@ clusterDomain: "cluster.local"
 clusterDNS:
   - "10.32.0.10"
 podCIDR: "${POD_CIDR}"
-resolvConf: "/run/systemd/resolve/resolv.conf"
+resolvConf: "/etc/resolv.conf"
 runtimeRequestTimeout: "15m"
 tlsCertFile: "/var/lib/kubelet/${WORKER_NAME}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/${WORKER_NAME}-key.pem"
@@ -422,7 +422,7 @@ ExecStart=/usr/local/bin/kubelet \\
   --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
   --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
-  --resolv-conf=/run/systemd/resolve/resolv.conf \\
+  --resolv-conf=/etc/resolv.conf \\
   --network-plugin=cni \\
   --register-node=true \\
   --v=2
@@ -529,7 +529,6 @@ SSH:
 {
 sudo systemctl daemon-reload
 sudo systemctl enable containerd kubelet kube-proxy
-sudo systemctl restart systemd-resolved
 sudo systemctl stop containerd kubelet kube-proxy
 sudo systemctl start containerd kubelet kube-proxy
 }
@@ -567,9 +566,9 @@ kubectl get nodes --kubeconfig admin.kubeconfig
 
 ```
 NAME             STATUS   ROLES    AGE   VERSION
-ip-10-240-0-20   Ready    <none>   51s   v1.15.3
-ip-10-240-0-21   Ready    <none>   51s   v1.15.3
-ip-10-240-0-22   Ready    <none>   51s   v1.15.3
+ip-10-240-0-20   Ready    <none>   51s   v1.17.2
+ip-10-240-0-21   Ready    <none>   51s   v1.17.2
+ip-10-240-0-22   Ready    <none>   51s   v1.17.2
 ```
 
 Next: [Configuring kubectl for Remote Access](10-configuring-kubectl.md)
