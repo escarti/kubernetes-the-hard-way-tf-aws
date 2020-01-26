@@ -85,6 +85,10 @@
         dest: "/etc/systemd/system/kube-scheduler.service"
       become: yes
     
+    - name: 08.14 Enablei ip forwarding
+      shell: sysctl -w net.ipv4.ip_forward=1
+      become: yes
+
     - name: 08.14 Start the Controller Services
       shell: |
         systemctl daemon-reload 
@@ -92,3 +96,52 @@
         sudo systemctl stop kube-apiserver kube-controller-manager kube-scheduler
         sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
       become: yes
+    
+    - name: sleep for 30 seconds to start kubectl and continue with play
+      wait_for:
+        timeout: 30
+      delegate_to: localhost
+
+    - name: 8.15 Create ClusterRole to access Kubelet API 
+      shell:
+        cmd: |
+          cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+          apiVersion: rbac.authorization.k8s.io/v1beta1
+          kind: ClusterRole
+          metadata:
+            annotations:
+              rbac.authorization.kubernetes.io/autoupdate: "true"
+            labels:
+              kubernetes.io/bootstrapping: rbac-defaults
+            name: system:kube-apiserver-to-kubelet
+          rules:
+            - apiGroups:
+                - ""
+              resources:
+                - nodes/proxy
+                - nodes/stats
+                - nodes/log
+                - nodes/spec
+                - nodes/metrics
+              verbs:
+                - "*"
+          EOF
+
+    - name: 8.16 Bind ClusterRole to user kubernetes 
+      shell:
+        cmd: |
+          cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+          apiVersion: rbac.authorization.k8s.io/v1beta1
+          kind: ClusterRoleBinding
+          metadata:
+            name: system:kube-apiserver
+            namespace: ""
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: system:kube-apiserver-to-kubelet
+          subjects:
+            - apiGroup: rbac.authorization.k8s.io
+              kind: User
+              name: kubernetes
+          EOF

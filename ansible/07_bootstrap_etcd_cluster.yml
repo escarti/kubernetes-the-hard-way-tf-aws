@@ -30,13 +30,20 @@
       shell: cp /home/ubuntu/ca.pem /home/ubuntu/kubernetes-key.pem /home/ubuntu/kubernetes.pem /etc/etcd/
       become: yes
     
-    - name: 07.6 Create service file
+    - name: 07.6 Get DNS-name
+      shell: |
+        hostname
+      args:
+        warn: false
+      register: private_dns
+
+    - name: 07.7 Create service file
       template:
         src: "template_files/07_etcd_service.template"
         dest: "/etc/systemd/system/etcd.service"
       become: yes
 
-    - name: 07.7 Start the etcd Server
+    - name: 07.8 Start the etcd Server
       shell: |
         systemctl daemon-reload 
         systemctl enable etcd 

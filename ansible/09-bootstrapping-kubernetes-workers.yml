@@ -33,7 +33,7 @@
       mode: a+x
     with_items:
       - "https://storage.googleapis.com/kubernetes-the-hard-way/runsc"
-      - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64"
+      - "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64"
       - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubectl"
       - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kube-proxy"
       - "https://storage.googleapis.com/kubernetes-release/release/v1.15.3/bin/linux/amd64/kubelet"
@@ -101,15 +101,15 @@
 
   - name: 09.13 Get DNS-name
     shell: |
-      curl -s http://169.254.169.254/latest/meta-data/public-hostname
+      hostname
     args:
       warn: false
-    register: public_dns
+    register: private_dns
   
   - name: 09.14 Copy Kubelet cert files
     shell: |
-      cp {{ public_dns.stdout }}-key.pem {{ public_dns.stdout }}.pem /var/lib/kubelet/
-      cp {{ public_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
+      cp {{ private_dns.stdout }}-key.pem {{ private_dns.stdout }}.pem /var/lib/kubelet/
+      cp {{ private_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
       cp ca.pem /var/lib/kubernetes/
     args:
       warn: false
@@ -149,6 +149,7 @@
     shell: |
       systemctl daemon-reload 
       systemctl enable containerd kubelet kube-proxy
+      sudo systemctl restart systemd-resolved
       systemctl stop containerd kubelet kube-proxy
       systemctl start containerd kubelet kube-proxy
     become: yes

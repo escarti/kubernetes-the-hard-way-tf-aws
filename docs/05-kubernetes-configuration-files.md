@@ -33,9 +33,13 @@ Generate a kubeconfig file for each worker node:
 
 ```
 {
-PUBLIC_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 | jq -r '.Reservations[].Instances[].PublicDnsName'))
+PRIVATE_DNS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
+ "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1\
+ | jq -r '.Reservations[].Instances[].PrivateDnsName'))
 
-for instance in $PUBLIC_DNS; do
+for instance in $PRIVATE_DNS; do
+  instance=$(echo $instance | cut -d'.' -f1)
+  
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.pem \
     --embed-certs=true \

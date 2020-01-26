@@ -11,10 +11,10 @@ INSTANCE_IDS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[].
 for instance in $INSTANCE_IDS; do
 
 PUBLIC_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicIpAddress') 
-PUBLIC_DNS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicDnsName') 
 PRIVATE_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateIpAddress') 
+PRIVATE_DNS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateDnsName' | cut -d'.' -f1) 
 
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ca.pem $PUBLIC_DNS-key.pem $PUBLIC_DNS.pem ubuntu@$PUBLIC_IP:~/
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ca.pem $PRIVATE_DNS-key.pem $PRIVATE_DNS.pem ubuntu@$PUBLIC_IP:~/
 
 done
 

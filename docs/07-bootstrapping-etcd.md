@@ -84,7 +84,6 @@ $(declare -i i=0
 for ip in $PUBLIC_CONTROLLER_IPS; do
 echo "        "${ip}:
 echo "          "priv_ip: $(echo $PRIVATE_CONTROLLER_IPS_RAW | jq -r '.['${i}']')
-echo "          "pub_dns: $(echo $PUBLIC_DNS_RAW | jq -r '.['${i}']')
 i=$i+1 
 done)
       vars:
@@ -195,7 +194,7 @@ INTERNAL_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
 Each etcd member must have a unique name within an etcd cluster. Set the etcd name to match the public hostname of the current compute instance:
 
 ```
-ETCD_NAME=$(curl http://169.254.169.254/latest/meta-data/public-hostname)
+ETCD_NAME=$(hostname)
 ```
 
 Copy the CLUSTER_SETTING variable that you retreived before
@@ -293,9 +292,9 @@ sudo ETCDCTL_API=3 etcdctl member list \
 > output should look something like this
 
 ```
-2cce75a6dfa987e2, started, ec2-18-184-218-69.eu-central-1.compute.amazonaws.com, https://10.240.0.42:2380, https://10.240.0.42:2379, false
-5e3509fb8e8c6cae, started, ec2-35-158-73-102.eu-central-1.compute.amazonaws.com, https://10.240.0.14:2380, https://10.240.0.14:2379, false
-89c354118a6e6b7b, started, ec2-35-157-97-179.eu-central-1.compute.amazonaws.com, https://10.240.0.28:2380, https://10.240.0.28:2379, false
+1f7d3e35df13f868, started, ip-10-240-0-40, https://10.240.0.40:2380, https://10.240.0.40:2379, false
+50c9ffea3001b48c, started, ip-10-240-0-21, https://10.240.0.21:2380, https://10.240.0.21:2379, false
+ffed16798470cab5, started, ip-10-240-0-11, https://10.240.0.11:2380, https://10.240.0.11:2379, false
 ```
 
 Next: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)

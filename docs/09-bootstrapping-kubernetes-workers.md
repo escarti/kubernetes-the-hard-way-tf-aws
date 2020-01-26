@@ -78,7 +78,6 @@ $(declare -i i=0
 for ip in $PUBLIC_CONTROLLER_IPS; do
 echo "        "${ip}:
 echo "          "priv_ip: $(echo $PRIVATE_CONTROLLER_IPS_RAW | jq -r '.['${i}']')
-echo "          "pub_dns: $(echo $PUBLIC_DNS_RAW | jq -r '.['${i}']')
 i=$i+1 
 done)
       vars:
@@ -397,7 +396,7 @@ clusterDomain: "cluster.local"
 clusterDNS:
   - "10.32.0.10"
 podCIDR: "${POD_CIDR}"
-resolvConf: "/etc/resolv.conf"
+resolvConf: "/run/systemd/resolve/resolv.conf"
 runtimeRequestTimeout: "15m"
 tlsCertFile: "/var/lib/kubelet/${WORKER_NAME}.pem"
 tlsPrivateKeyFile: "/var/lib/kubelet/${WORKER_NAME}-key.pem"
@@ -423,7 +422,7 @@ ExecStart=/usr/local/bin/kubelet \\
   --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
   --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
-  --hostname-override=${WORKER_NAME} \\
+  --resolv-conf=/run/systemd/resolve/resolv.conf \\
   --network-plugin=cni \\
   --register-node=true \\
   --v=2
@@ -437,17 +436,17 @@ EOF
 
 ANSIBLE:
 ```
-  - name: Get DNS-name
+  - name: 09.13 Get DNS-name
     shell: |
-      curl -s http://169.254.169.254/latest/meta-data/public-hostname
+      curl -s http://169.254.169.254/latest/meta-data/hostname
     args:
       warn: false
-    register: public_dns
+    register: private_dns
   
-  - name: Copy Kubelet cert files
+  - name: 09.14 Copy Kubelet cert files
     shell: |
-      cp {{ public_dns.stdout }}-key.pem {{ public_dns.stdout }}.pem /var/lib/kubelet/
-      cp {{ public_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
+      cp {{ private_dns.stdout }}-key.pem {{ private_dns.stdout }}.pem /var/lib/kubelet/
+      cp {{ private_dns.stdout }}.kubeconfig /var/lib/kubelet/kubeconfig
       cp ca.pem /var/lib/kubernetes/
     args:
       warn: false
@@ -530,6 +529,7 @@ SSH:
 {
 sudo systemctl daemon-reload
 sudo systemctl enable containerd kubelet kube-proxy
+sudo systemctl restart systemd-resolved
 sudo systemctl stop containerd kubelet kube-proxy
 sudo systemctl start containerd kubelet kube-proxy
 }

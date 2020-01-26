@@ -147,10 +147,11 @@ for instance in $INSTANCE_IDS; do
 PUBLIC_IP=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicIpAddress') 
 PUBLIC_DNS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicDnsName') 
 PRIVATE_IP=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateIpAddress') 
+PRIVATE_DNS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateDnsName' | cut -d'.' -f1) 
 
-cat > ${PUBLIC_DNS}-csr.json <<EOF
+cat > ${PRIVATE_DNS}-csr.json <<EOF
 {
-  "CN": "system:node:${PUBLIC_DNS}",
+  "CN": "system:node:${PRIVATE_DNS}",
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -173,7 +174,7 @@ cfssl gencert \
   -config=ca-config.json \
   -hostname=${PUBLIC_DNS},${PUBLIC_IP},${PRIVATE_IP} \
   -profile=kubernetes \
-  ${PUBLIC_DNS}-csr.json | cfssljson -bare ${PUBLIC_DNS}
+  ${PRIVATE_DNS}-csr.json | cfssljson -bare ${PRIVATE_DNS}
 
 done
 ```

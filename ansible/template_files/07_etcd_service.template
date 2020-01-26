@@ -5,7 +5,7 @@ Documentation=https://github.com/coreos
 [Service]
 Type=notify
 ExecStart=/usr/local/bin/etcd \
-  --name {{ pub_dns }} \
+  --name {{ private_dns.stdout }} \
   --cert-file=/etc/etcd/kubernetes.pem \
   --key-file=/etc/etcd/kubernetes-key.pem \
   --peer-cert-file=/etc/etcd/kubernetes.pem \
