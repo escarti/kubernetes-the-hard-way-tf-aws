@@ -30,13 +30,13 @@ PRIVATE_CONTROLLER_IPS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
  "Reservations[].Instances[].PrivateIpAddress")
 
-PUBLIC_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
+PRIVATE_DNS_RAW=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
- "Reservations[].Instances[].PublicDnsName")
+ "Reservations[].Instances[].PrivateDnsName")
 
-PUBLIC_WORKER_IPS=($(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
+PUBLIC_WORKER_IPS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1 --query\
- "Reservations[].Instances[].PublicIpAddress" | jq -r ".[]"))
+ "Reservations[].Instances[].PublicIpAddress" | jq -r ".[]")
 
 PUBLIC_CONTROLLER_IPS=($(echo $PUBLIC_CONTROLLER_IPS_RAW | jq -r ".[]"))
 
@@ -44,7 +44,7 @@ CLUSTER_SETTING=""
 ETCD_CLUSTER_SETTING=""
 declare -i i=0
 for ip_address in $PUBLIC_CONTROLLER_IPS; do
-  CLUSTER_SETTING="${CLUSTER_SETTING},$(echo $PUBLIC_DNS_RAW | jq -r '.['${i}']')=https://$(echo $PRIVATE_CONTROLLER_IPS_RAW | jq -r '.['${i}']'):2380"
+  CLUSTER_SETTING="${CLUSTER_SETTING},$(echo $PRIVATE_DNS_RAW | jq -r '.['${i}']' | cut -d'.' -f1)=https://$(echo $PRIVATE_CONTROLLER_IPS_RAW | jq -r '.['${i}']'):2380"
   ETCD_CLUSTER_SETTING="${ETCD_CLUSTER_SETTING},https://$(echo $PRIVATE_CONTROLLER_IPS_RAW | jq -r '.['${i}']'):2379"
   i=$i+1
 done

@@ -139,8 +139,9 @@ Generate a certificate and private key for each Kubernetes worker node:
 You have a script file you can run under [/scripts/04_generate_worker_cets.sh](../scripts/04_generate_worker_cets.sh)
 
 ```
+{
 AWS_CLI_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_worker_*_instance" "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
-INSTANCE_IDS=$(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId') 
+INSTANCE_IDS=($(echo $AWS_CLI_RESULT | jq -r '.Reservations[].Instances[].InstanceId')) 
 
 for instance in $INSTANCE_IDS; do
 
@@ -177,6 +178,7 @@ cfssl gencert \
   ${PRIVATE_DNS}-csr.json | cfssljson -bare ${PRIVATE_DNS}
 
 done
+}
 ```
 ### The Controller Manager Client Certificate
 
@@ -316,13 +318,14 @@ Generate the Kubernetes API Server certificate and private key:
 AWS_MASTER_RESULT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=kube_controller_*_instance"\
  "Name=instance-state-name,Values=running" --profile=kube-the-hard-way --region=eu-central-1)
 MASTER_PRIVATE_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PrivateIpAddress) | join(",")')
-MASTER_DNS_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicDnsName) | join(",")')
-MASTER_PUBLIC_IP_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PublicIpAddress) | join(",")')
+MASTER_PRIVATE_DNS_LIST=$(echo $AWS_MASTER_RESULT | jq -r '.Reservations | map(.Instances[].PrivateDnsName) | join(",")')
+MASTER_PRIVATE_HOSTNAMES=$(echo $MASTER_PRIVATE_DNS_LIST | sed 's/.eu-central-1\.compute\.internal/''/g')
 
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers --names "kube-loadbalancer" --output text --query 'LoadBalancers[].DNSName' --profile=kube-the-hard-way --region=eu-central-1)
 
+
 CERT_HOSTNAME=10.32.0.1,$MASTER_PRIVATE_IP_LIST,\
-$MASTER_DNS_LIST,$MASTER_PUBLIC_IP_LIST,127.0.0.1,localhost,kubernetes,kubernetes.default,\
+$MASTER_PRIVATE_DNS_LIST,$MASTER_PRIVATE_HOSTNAMES,127.0.0.1,localhost,kubernetes,kubernetes.default,\
 kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local,\
 $KUBERNETES_PUBLIC_ADDRESS
 
@@ -409,10 +412,10 @@ INSTANCE_IDS=($(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[]
 for instance in $INSTANCE_IDS; do
 
 PUBLIC_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicIpAddress') 
-PUBLIC_DNS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PublicDnsName') 
 PRIVATE_IP=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateIpAddress') 
+PRIVATE_DNS=$(echo $AWS_WORKER_CLI_RESULT | jq -r '.Reservations[].Instances[] | select(.InstanceId=="'${instance}'") | .PrivateDnsName' | cut -d'.' -f1) 
 
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ca.pem $PUBLIC_DNS-key.pem $PUBLIC_DNS.pem ubuntu@$PUBLIC_IP:~/
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/kube_the_hard_way ca.pem $PRIVATE_DNS-key.pem $PRIVATE_DNS.pem ubuntu@$PUBLIC_IP:~/
 
 done
 }
