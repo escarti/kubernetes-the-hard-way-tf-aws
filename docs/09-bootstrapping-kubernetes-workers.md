@@ -147,7 +147,7 @@ wget -q --show-progress --https-only --timestamping \
   https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.17.0/crictl-v1.17.0-linux-amd64.tar.gz \
   https://storage.googleapis.com/kubernetes-the-hard-way/runsc \
   https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
-  https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-amd64-v0.8.5.tgz \
+  https://github.com/containernetworking/plugins/releases/download/v0.8.2/cni-plugins-linux-amd64-v0.8.2.tgz \
   https://github.com/containerd/containerd/releases/download/v1.3.2/containerd-1.3.2.linux-amd64.tar.gz \
   https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl \
   https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kube-proxy \
@@ -173,7 +173,7 @@ chmod +x kubectl kube-proxy kubelet runc.amd64 runsc
 sudo mv runc.amd64 runc
 sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
 sudo tar -xvf crictl-v1.17.0-linux-amd64.tar.gz -C /usr/local/bin/
-sudo tar -xvf cni-plugins-amd64-v0.8.5.tgz -C /opt/cni/bin/
+sudo tar -xvf cni-plugins-linux-amd64-v0.8.2.tgz -C /opt/cni/bin/
 sudo tar -xvf containerd-1.3.2.linux-amd64.tar.gz -C /
 ```
 
@@ -226,7 +226,7 @@ ANSIBLE:
 
   - name: Download and untar cni-plugins
     unarchive:
-      src: "https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-amd64-v0.8.5.tgz"
+      src: "https://github.com/containernetworking/plugins/releases/download/v0.8.2/cni-plugins-linux-amd64-v0.8.2.tgz"
       dest: /opt/cni/
       remote_src: yes
     become: yes

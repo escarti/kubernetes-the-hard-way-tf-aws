@@ -160,6 +160,8 @@ resource "aws_instance" "kube_worker" {
   key_name               = aws_key_pair.kube_auth.id
   vpc_security_group_ids = [aws_security_group.kube_web_open_sg.id]
   subnet_id              = aws_subnet.kube_public_subnet[count.index].id
+  source_dest_check      = false
+
 }
 
 resource "aws_lb" "kube_loadbalancer" {

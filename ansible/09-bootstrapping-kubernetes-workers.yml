@@ -59,7 +59,7 @@
 
   - name: 09.7 Download and untar cni-plugins
     unarchive:
-      src: "https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz"
+      src: "https://github.com/containernetworking/plugins/releases/download/v0.8.2/cni-plugins-linux-amd64-v0.8.2.tgz"
       dest: /opt/cni/bin/
       remote_src: yes
     become: yes

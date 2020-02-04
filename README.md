@@ -27,7 +27,7 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 * [Kubernetes](https://github.com/kubernetes/kubernetes) 1.17.2
 * [containerd Container Runtime](https://github.com/containerd/containerd) 1.3.2
 * [gVisor](https://github.com/google/gvisor) 08879266fef3a67fac1a77f1ea133c3ac75759dd
-* [CNI Container Networking](https://github.com/containernetworking/cni) 0.8.5
+* [CNI Container Networking](https://github.com/containernetworking/cni) 0.8.2
 * [etcd](https://github.com/coreos/etcd) 3.4.0
 
 ## Labs

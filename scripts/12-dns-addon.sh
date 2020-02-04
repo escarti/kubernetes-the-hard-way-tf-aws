@@ -4,9 +4,11 @@ echo "-- 12. DNS ADDON"
 
 kubectl apply -f ../templates/kube-dns.yaml
 
+sleep 20s
+
 kubectl get pods -l k8s-app=kube-dns -n kube-system
 
-sleep 20s
+sleep 40s
 
 kubectl run --generator=run-pod/v1 busybox --image=busybox:1.28 --command -- sleep 3600
 
