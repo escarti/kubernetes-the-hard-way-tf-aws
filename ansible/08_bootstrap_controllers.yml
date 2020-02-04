@@ -97,7 +97,7 @@
         sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
       become: yes
     
-    - name: sleep for 60 seconds to start kubectl and continue with play
+    - name: sleep for 0 seconds to start kubectl and continue with play
       wait_for:
         timeout: 60
       delegate_to: localhost
