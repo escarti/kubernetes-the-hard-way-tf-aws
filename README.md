@@ -1,6 +1,6 @@
 # About
 
-This guide was created following the awesome [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) by Kelsey Hightower. 
+This guide was created following the awesome [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) by Kelsey Hightower. It's a lot of copy pasting, so all credit to him.
 
 I consulted [Prabhat Sharma](https://github.com/prabhatsharma) adaption of [Kubernetes The Hard Way (AWS)](https://github.com/prabhatsharma/kubernetes-the-hard-way-aws)
 

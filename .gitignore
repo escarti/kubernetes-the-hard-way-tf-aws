@@ -1,3 +1,6 @@
 .terraform
 aws_hosts.yml
 tmp/*
+terraform/*.tfstate
+terraform/*.tfvars
+.terraform*

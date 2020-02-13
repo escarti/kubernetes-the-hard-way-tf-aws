@@ -1,18 +1,9 @@
 terraform {
-  required_version = "0.12.12"
-
-  backend "s3" {
-    bucket         = "hf-sandbox-tfstate-bucket"
-    encrypt        = true
-    key            = "kubernetes-the-hard-way/terraform.tfstate"
-    region         = "eu-central-1"
-    dynamodb_table = "sandbox-tfstate-lock-table"
-    profile        = "kube-the-hard-way"
-  }
+  required_version = "0.12.19"
 }
 
 provider "aws" {
-  version = "2.33.0"
+  version = "2.46.0"
   region  = var.aws_region
   profile = var.aws_profile
 }
@@ -103,7 +94,6 @@ resource "aws_security_group" "kube_web_open_sg" {
     cidr_blocks = ["10.200.0.0/16"]
   }
 
-
   #FOR LOAD BALANCER INCOMING 
   ingress {
     description = "Standard https incoming"
@@ -121,6 +111,7 @@ resource "aws_security_group" "kube_web_open_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 ## -- Subnet and Route tabel association
 resource "aws_route_table_association" "kube_public_assoc" {
   count          = length(aws_subnet.kube_public_subnet)
