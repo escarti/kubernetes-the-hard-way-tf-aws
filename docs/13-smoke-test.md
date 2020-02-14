@@ -2,6 +2,28 @@
 
 In this lab you will complete a series of tasks to ensure your Kubernetes cluster is functioning correctly.
 
+## Dashboard
+
+Create service account 
+```
+kubectl create serviceaccount dashboard
+```
+
+Now we bind the account to cluster-admin
+```
+kubectl create rolebinding dashboard-binding --clusterrole=cluster-admin --serviceaccount=default:dashboard
+```
+
+Get account token
+```
+TOKEN=$(kubectl get secrets $(kubectl get serviceaccount dashboard -o go-template --template='{{range .secrets}}{{.name}}{{"\n"}}{{end}}') -o go-template --template '{{index .data "token"}}' | base64 -d)
+```
+
+Run kubectl proxy
+```
+kubectl proxy
+```
+
 ## Data Encryption
 
 In this section you will verify the ability to [encrypt secret data at rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#verifying-that-data-is-encrypted).
