@@ -233,6 +233,8 @@ EXTERNAL_IP=$(aws ec2 describe-instances \
 
 Make an HTTP request using the external IP address and the `nginx` node port:
 
+> TODO: This is not working right now :( will look into that
+
 ```
 curl -I http://${EXTERNAL_IP}:${NODE_PORT}
 ```
